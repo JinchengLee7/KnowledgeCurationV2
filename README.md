@@ -51,88 +51,16 @@ publishes the static-site data, and records enough state (`query_state`, run
 history, caches, merge/reject logs) that the **next** run can adapt by fixed
 rules.
 
-The diagram below is TikZ/LaTeX. Compile it with any LaTeX toolchain
-(`pdflatex`/`lualatex` on the `standalone` document, or drop the `tikzpicture`
-into an existing document with the listed libraries). Layout is top-to-bottom for
-the happy path (left column), with a right-hand column of fail-soft handlers and
-a dashed feedback edge that closes the loop.
+![Pipeline diagram](docs/pipeline.png)
 
-```latex
-\documentclass[border=8pt]{standalone}
-\usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric}
-\begin{document}
-\begin{tikzpicture}[
-  font=\small\sffamily,
-  node distance=7mm and 24mm,
-  proc/.style ={rectangle, rounded corners=2pt, draw=blue!55, fill=blue!6,
-                text width=34mm, align=center, minimum height=8mm, inner sep=3pt},
-  io/.style   ={rectangle, draw=teal!60, fill=teal!10,
-                text width=34mm, align=center, minimum height=8mm, inner sep=3pt},
-  dec/.style  ={diamond, aspect=2.2, draw=orange!75, fill=orange!12,
-                text width=17mm, align=center, inner sep=1pt},
-  store/.style={cylinder, shape border rotate=90, aspect=0.28, draw=violet!60,
-                fill=violet!8, text width=24mm, align=center, minimum height=12mm,
-                inner sep=2pt},
-  fail/.style ={rectangle, rounded corners=2pt, draw=red!60, fill=red!6,
-                text width=40mm, align=center, font=\scriptsize, inner sep=3pt},
-  flow/.style ={-{Stealth[length=2mm]}, thick, draw=black!75},
-  soft/.style ={-{Stealth[length=2mm]}, thick, dashed, draw=red!60},
-  link/.style ={{Stealth[length=1.6mm]}-{Stealth[length=1.6mm]}, dashed, draw=violet!60},
-  back/.style ={-{Stealth[length=2mm]}, thick, dashed, draw=teal!70},
-]
-% ---- happy-path spine (top to bottom) ----
-\node[io]                     (cfg) {Load \texttt{survey\_config.json}};
-\node[proc, below=of cfg]     (q)   {Build deterministic queries};
-\node[proc, below=of q]       (plan){Loop-control: plan adjustments};
-\node[proc, below=of plan]    (api) {Query Semantic Scholar};
-\node[proc, below=of api]     (nv)  {Normalize \& validate};
-\node[proc, below=of nv]      (dd)  {Intra-run dedupe};
-\node[proc, below=of dd]      (rs)  {Resolve identity vs.\ DB};
-\node[proc, below=of rs]      (sc)  {Score \texttt{baseline\_lexical\_v1}};
-\node[dec,  below=of sc]      (ft)  {score $\ge$ min?};
-\node[proc, below=of ft]      (ps)  {Persist papers / rejects / merges / source hits};
-\node[proc, below=of ps]      (tc)  {Target-paper check};
-\node[proc, below=of tc]      (qs)  {Update \texttt{query\_state}};
-\node[proc, below=of qs]      (pb)  {Publish NDJSON \& site JSON};
-\node[io,   below=of pb]      (rt)  {Artifacts \& \texttt{ManagerRunResult}};
-% ---- local data store ----
-\node[store, left=20mm of rs] (db)  {SQLite\\\texttt{baseline.sqlite3}\\+ \texttt{api\_cache}};
-% ---- fail-soft handlers (right column) ----
-\node[fail, right=of cfg] (e1) {missing / invalid $\rightarrow$ status \texttt{failure}, stop};
-\node[fail, right=of api] (e2) {429 / 5xx / timeout $\rightarrow$ backoff 2,5,15\,s ($\times$4) $\rightarrow$ skip query, continue};
-\node[fail, right=of nv]  (e3) {malformed record $\rightarrow$ reject \texttt{malformed\_metadata}};
-\node[fail, right=of ft]  (e4) {no title / below threshold / outside timeline $\rightarrow$ reject + evidence};
-\node[fail, right=of ps]  (e5) {DB error $\rightarrow$ record error, continue};
-\node[fail, right=of pb]  (e6) {publish error $\rightarrow$ status \texttt{partial\_success}};
-% ---- main flow ----
-\draw[flow] (cfg)--(q);   \draw[flow] (q)--(plan); \draw[flow] (plan)--(api);
-\draw[flow] (api)--(nv);  \draw[flow] (nv)--(dd);  \draw[flow] (dd)--(rs);
-\draw[flow] (rs)--(sc);   \draw[flow] (sc)--(ft);
-\draw[flow] (ft)--(ps) node[midway, fill=white, font=\scriptsize] {accept};
-\draw[flow] (ps)--(tc);   \draw[flow] (tc)--(qs);  \draw[flow] (qs)--(pb);
-\draw[flow] (pb)--(rt);
-% ---- soft / error edges ----
-\draw[soft] (cfg)--(e1); \draw[soft] (api)--(e2); \draw[soft] (nv)--(e3);
-\draw[soft] (ft)--(e4) node[midway, fill=white, font=\scriptsize] {reject};
-\draw[soft] (ps)--(e5); \draw[soft] (pb)--(e6);
-% ---- data-store links ----
-\draw[link] (db.north) to[out=90,in=180]  (api.west);
-\draw[link] (db.east)  --                  (rs.west);
-\draw[link] (db.south) to[out=-90,in=180]  (ps.west);
-% ---- feedback loop (closes the loop for the next run) ----
-\draw[back] (qs.west) to[out=180,in=180,looseness=1.5]
-      node[left, align=center, font=\scriptsize] {informs\\next run} (plan.west);
-\end{tikzpicture}
-\end{document}
-```
+*Solid black = happy path. Dashed red = fail-soft exits (error recorded, run
+continues). Dashed violet = SQLite reads/writes (including response cache).
+Dashed teal = feedback edge: per-query outcomes written to `query_state` feed
+the next run's loop-control.*
 
-**How to read it.** Solid black = the happy path. Dashed red = fail-soft exits
-(a problem is recorded and the run keeps going wherever possible). Dashed violet
-= reads/writes against the SQLite source-of-truth (including the response cache).
-Dashed teal = the feedback edge: this run's per-query outcomes are written to
-`query_state`, which the *next* run's loop-control reads when it plans
-adjustments.
+The source is `docs/pipeline.tex` (TikZ/LaTeX, `standalone` class). Re-compile
+with `pdflatex docs/pipeline.tex` if you edit it.
+
 
 ---
 
