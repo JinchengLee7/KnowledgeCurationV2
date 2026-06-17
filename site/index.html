@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dynamic-LR — Survey Papers</title>
+  <style>
+    body { font: 15px/1.5 system-ui, sans-serif; margin: 2rem; color: #1a1a1a; }
+    header { margin-bottom: 1.5rem; }
+    .status { background: #f4f4f5; border-radius: 8px; padding: .75rem 1rem; margin-bottom: 1rem; }
+    .controls { margin-bottom: 1rem; }
+    input, select { padding: .4rem .6rem; font-size: 14px; }
+    .paper { border-bottom: 1px solid #e5e5e5; padding: .75rem 0; }
+    .title { font-weight: 600; }
+    .meta { color: #666; font-size: 13px; }
+    .score { display: inline-block; min-width: 3.2rem; color: #2563eb; font-variant-numeric: tabular-nums; }
+    .tag { background: #eef2ff; color: #3730a3; border-radius: 4px; padding: 0 .4rem; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Dynamic-LR — Survey Papers</h1>
+    <div class="status" id="status">Loading…</div>
+    <div class="controls">
+      <input id="q" type="search" placeholder="filter by title…" />
+      <select id="arch">
+        <option value="">all architectures</option>
+        <option value="baseline">baseline</option>
+        <option value="single-agent">single-agent</option>
+        <option value="multi-agent">multi-agent</option>
+      </select>
+    </div>
+  </header>
+  <div id="list"></div>
+
+  <script>
+    let papers = [];
+
+    function render() {
+      const q = document.getElementById('q').value.toLowerCase();
+      const arch = document.getElementById('arch').value;
+      const list = document.getElementById('list');
+      const rows = papers.filter(p => {
+        const t = (p.title || '').toLowerCase().includes(q);
+        const a = !arch || ((p.provenance?.architectures_seen) || []).includes(arch);
+        return t && a;
+      });
+      list.innerHTML = rows.map(p => `
+        <div class="paper">
+          <div><span class="score">${(p.score ?? 0).toFixed(3)}</span>
+            <span class="title">${escapeHtml(p.title || '(untitled)')}</span></div>
+          <div class="meta">${(p.authors || []).slice(0,5).join(', ')}
+            ${p.year ? '· ' + p.year : ''} ${p.venue ? '· ' + escapeHtml(p.venue) : ''}
+            ${((p.provenance?.architectures_seen) || []).map(a => `<span class="tag">${a}</span>`).join(' ')}
+          </div>
+        </div>`).join('') || '<p>No papers match.</p>';
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    Promise.all([
+      fetch('data/papers.json').then(r => r.ok ? r.json() : []),
+      fetch('data/system_status.json').then(r => r.ok ? r.json() : null),
+    ]).then(([p, status]) => {
+      papers = (p || []).sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+      const s = document.getElementById('status');
+      s.textContent = status
+        ? `${papers.length} papers · last run ${status.architecture} (${status.status}) at ${status.last_run || status.updated_at || '?'}`
+        : `${papers.length} papers`;
+      render();
+    }).catch(e => { document.getElementById('status').textContent = 'Failed to load data: ' + e; });
+
+    document.getElementById('q').addEventListener('input', render);
+    document.getElementById('arch').addEventListener('change', render);
+  </script>
+</body>
+</html>

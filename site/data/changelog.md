@@ -1,0 +1,52 @@
+
+## 2026-06-17T08:37:19.896616+00:00 — baseline (partial_success)
+- run_id: `baseline-20260617T083430559041`
+- queries: 8, candidates: 100, after dedupe: 100
+- accepted: 100, rejected: 0, errors: 6
+- top accepted:
+  - (0.544) Explainable AI (XAI) for trustworthy and transparent decision-making: A theoretical framework for AI interpretability
+  - (0.529) Human-centered evaluation of explainable AI applications: a systematic review
+  - (0.523) LLMs for Explainable AI: A Comprehensive Survey
+  - (0.514) "Help Me Help the AI": Understanding How Explainability Can Support Human-AI Interaction
+  - (0.509) Explainable AI in Clinical Decision Support Systems: A Meta-Analysis of Methods, Applications, and Usability Challenges
+  - (0.508) From Explainable to Interactive AI: A Literature Review on Current Trends in Human-AI Interaction
+  - (0.506) Explainable AI: A Review of Machine Learning Interpretability Methods
+  - (0.504) An Interpretable Approach with Explainable AI for Heart Stroke Prediction
+  - (0.504) Explainable AI for Safe and Trustworthy Autonomous Driving: A Systematic Review
+  - (0.504) A Multidisciplinary Survey and Framework for Design and Evaluation of Explainable AI Systems
+  - (0.501) Explainable AI for 6G Use Cases: Technical Aspects and Research Challenges
+  - (0.500) From Anecdotal Evidence to Quantitative Evaluation Methods: A Systematic Review on Evaluating Explainable AI
+  - (0.499) Explainable AI for Industry 5.0: Vision, Architecture, and Potential Directions
+  - (0.482) Explainable AI improves task performance in human–AI collaboration
+  - (0.481) Recent Applications of Explainable AI (XAI): A Systematic Literature Review
+  - (0.477) Secure and Transparent Banking: Explainable AI-Driven Federated Learning Model for Financial Fraud Detection
+  - (0.476) Revolutionizing breast ultrasound diagnostics with EfficientNet-B7 and Explainable AI
+  - (0.476) Explainable AI for lung cancer detection via a custom CNN on CT images
+  - (0.474) Predicting cardiovascular risk with hybrid ensemble learning and explainable AI
+  - (0.469) Explainable AI chatbots towards XAI ChatGPT: A review
+
+## 2026-06-17T08:39:40.612425+00:00 — baseline (partial_success)
+- run_id: `baseline-20260617T083803404878`
+- queries: 8, candidates: 200, after dedupe: 199
+- accepted: 193, rejected: 6, errors: 4
+- top accepted:
+  - (0.544) Explainable AI (XAI) for trustworthy and transparent decision-making: A theoretical framework for AI interpretability
+  - (0.543) A Survey on Uncertainty Quantification Methods for Deep Learning
+  - (0.529) Human-centered evaluation of explainable AI applications: a systematic review
+  - (0.523) LLMs for Explainable AI: A Comprehensive Survey
+  - (0.522) Collective eXplainable AI: Explaining Cooperative Strategies and Agent Contribution in Multiagent Reinforcement Learning With Shapley Values
+  - (0.521) ResViT FusionNet Model: An explainable AI-driven approach for automated grading of diabetic retinopathy in retinal images
+  - (0.518) Explainable AI without Interpretable Model
+  - (0.517) An Interrogative Survey of Explainable AI in Manufacturing
+  - (0.514) A Comparative Study of LIME and SHAP for Enhancing Trustworthiness and Efficiency in Explainable AI Systems
+  - (0.514) "Help Me Help the AI": Understanding How Explainability Can Support Human-AI Interaction
+  - (0.509) Explainable AI in Clinical Decision Support Systems: A Meta-Analysis of Methods, Applications, and Usability Challenges
+  - (0.508) From Explainable to Interactive AI: A Literature Review on Current Trends in Human-AI Interaction
+  - (0.507) Benchmarking Uncertainty Quantification Methods for Large Language Models with LM-Polygraph
+  - (0.506) Explainable AI: A Review of Machine Learning Interpretability Methods
+  - (0.505) Explainable AI for Intrusion Detection Systems: LIME and SHAP Applicability on Multi-Layer Perceptron
+  - (0.504) An Interpretable Approach with Explainable AI for Heart Stroke Prediction
+  - (0.504) Explainable AI for Safe and Trustworthy Autonomous Driving: A Systematic Review
+  - (0.504) A Multidisciplinary Survey and Framework for Design and Evaluation of Explainable AI Systems
+  - (0.503) Implementing Explainable AI in Healthcare: Techniques for Interpretable Machine Learning Models in Clinical Decision-Making
+  - (0.501) Explainable AI for 6G Use Cases: Technical Aspects and Research Challenges

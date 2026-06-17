@@ -1,0 +1,3 @@
+# Dynamic-LR baseline runtime has no third-party dependencies (stdlib only).
+# Development / testing:
+pytest>=7.0

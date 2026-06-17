@@ -1,0 +1,18 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Secrets — never commit the real .env
+.env
+
+# Baseline local database and caches (regenerated at runtime)
+data/baseline/*.sqlite3
+data/baseline/*.sqlite3-journal
+data/baseline/raw_cache/
+data/baseline/run_artifacts/
+
+# Atomic-write temp files
+*.tmp

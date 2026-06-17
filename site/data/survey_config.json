@@ -1,0 +1,53 @@
+{
+  "topic_overview": "Explainable AI",
+  "question_mode": 3,
+  "research_questions": [
+    "What methods have been used to make AI explainable?",
+    "How have uncertainty estimates been used for explaining AI decisions?",
+    "What methods have been used to make AI interpretable?"
+  ],
+  "question_context": "Prioritize practical methods, rigorous evaluation, and reproducible experimental settings.",
+  "query_hints": [
+    "AI explanation",
+    "uncertainty quantification",
+    "human AI interaction"
+  ],
+  "timeline_from_year": 2024,
+  "timeline_to_year": 2026,
+  "min_relevance_score": 0.3,
+  "target_papers": [],
+  "baseline": {
+    "max_queries": 12,
+    "max_results_per_query": 50,
+    "use_bulk_search": false,
+    "enable_raw_cache": true,
+    "enable_sqlite": true,
+    "min_title_tokens": 2,
+    "require_title": true,
+    "require_year": false,
+    "require_abstract": false,
+    "strict_timeline": false
+  },
+  "semantic_scholar": {
+    "fields": [
+      "paperId",
+      "corpusId",
+      "title",
+      "abstract",
+      "year",
+      "authors",
+      "url",
+      "openAccessPdf",
+      "externalIds",
+      "citationCount",
+      "referenceCount",
+      "influentialCitationCount",
+      "publicationTypes",
+      "publicationDate",
+      "venue",
+      "fieldsOfStudy",
+      "isOpenAccess"
+    ]
+  },
+  "evaluation": {}
+}
