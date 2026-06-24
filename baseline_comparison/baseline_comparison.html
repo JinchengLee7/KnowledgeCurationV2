@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baseline Comparison · Dynamic-LR · PRS · PF</title>
+<style>
+  :root {
+    --bg:       #0f1117;
+    --surface:  #1a1d27;
+    --card:     #21253a;
+    --border:   #2e3350;
+    --accent1:  #4f9cf9;   /* Dynamic-LR blue  */
+    --accent2:  #f97b4f;   /* PRS orange       */
+    --accent3:  #50d890;   /* PF green         */
+    --text:     #d8ddf5;
+    --muted:    #7a84a8;
+    --pro:      #50d890;
+    --con:      #f97b7b;
+    --warn:     #f9c74f;
+    --heading:  #eef0fc;
+    --code-bg:  #12151e;
+    font-size:  16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.65;
+  }
+
+  /* ── Navigation ── */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(15,17,23,.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: .6rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+  }
+  nav .logo { font-weight: 700; color: var(--heading); font-size: .95rem; white-space: nowrap; }
+  nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: .78rem;
+    font-weight: 500;
+    letter-spacing: .02em;
+    white-space: nowrap;
+    padding: .25rem .5rem;
+    border-radius: 4px;
+    transition: color .15s, background .15s;
+  }
+  nav a:hover { color: var(--heading); background: var(--card); }
+
+  /* ── Layout ── */
+  main { max-width: 1100px; margin: 0 auto; padding: 0 2rem 6rem; }
+
+  /* ── Sections ── */
+  section {
+    padding: 4rem 0 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+  section:last-child { border-bottom: none; }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 5rem 0 3.5rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero h1 { font-size: 2.6rem; font-weight: 800; color: var(--heading); letter-spacing: -.02em; }
+  .hero .sub { font-size: 1.05rem; color: var(--muted); margin-top: .75rem; }
+  .pill-row { display: flex; justify-content: center; gap: 1rem; margin-top: 1.8rem; flex-wrap: wrap; }
+  .pill {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .45rem 1.1rem; border-radius: 999px; font-size: .85rem; font-weight: 600;
+    border: 1.5px solid;
+  }
+  .pill.dlr  { color: var(--accent1); border-color: var(--accent1); background: rgba(79,156,249,.08); }
+  .pill.prs  { color: var(--accent2); border-color: var(--accent2); background: rgba(249,123,79,.08); }
+  .pill.pf   { color: var(--accent3); border-color: var(--accent3); background: rgba(80,216,144,.08); }
+
+  /* ── Typography ── */
+  h2 {
+    font-size: 1.55rem; font-weight: 700; color: var(--heading);
+    margin-bottom: 1.2rem; display: flex; align-items: center; gap: .6rem;
+  }
+  h2 .step-badge {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 6px; padding: .1rem .55rem; font-size: .75rem;
+    color: var(--muted); font-weight: 600; letter-spacing: .04em;
+  }
+  h3 { font-size: 1.05rem; font-weight: 700; color: var(--heading); margin: 1.6rem 0 .6rem; }
+  h4 { font-size: .9rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 1.2rem 0 .4rem; }
+  p  { color: var(--text); margin-bottom: .85rem; font-size: .95rem; }
+
+  /* ── System labels ── */
+  .tag-dlr { color: var(--accent1); font-weight: 700; }
+  .tag-prs { color: var(--accent2); font-weight: 700; }
+  .tag-pf  { color: var(--accent3); font-weight: 700; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.3rem 1.4rem; margin-bottom: 1rem;
+  }
+  .card-row {
+    display: grid; gap: 1rem;
+  }
+  .card-row.cols3 { grid-template-columns: repeat(3, 1fr); }
+  .card-row.cols2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 780px) {
+    .card-row.cols3, .card-row.cols2 { grid-template-columns: 1fr; }
+  }
+
+  .sys-card { border-radius: 12px; padding: 1.3rem 1.4rem; }
+  .sys-card.dlr { background: rgba(79,156,249,.07); border: 1px solid rgba(79,156,249,.25); }
+  .sys-card.prs { background: rgba(249,123,79,.07); border: 1px solid rgba(249,123,79,.25); }
+  .sys-card.pf  { background: rgba(80,216,144,.07); border: 1px solid rgba(80,216,144,.25); }
+  .sys-card .sys-title { font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-bottom: .6rem; }
+  .sys-card.dlr .sys-title { color: var(--accent1); }
+  .sys-card.prs .sys-title { color: var(--accent2); }
+  .sys-card.pf  .sys-title { color: var(--accent3); }
+
+  /* ── Pro / Con lists ── */
+  .pro-con { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; margin: .6rem 0 1.2rem; }
+  @media (max-width: 600px) { .pro-con { grid-template-columns: 1fr; } }
+  .pro-list, .con-list { border-radius: 8px; padding: .9rem 1rem; }
+  .pro-list { background: rgba(80,216,144,.07); border: 1px solid rgba(80,216,144,.2); }
+  .con-list { background: rgba(249,123,123,.07); border: 1px solid rgba(249,123,123,.2); }
+  .pro-list h5 { color: var(--pro); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .45rem; }
+  .con-list h5 { color: var(--con); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .45rem; }
+  ul.items { list-style: none; padding: 0; }
+  ul.items li { font-size: .88rem; padding: .2rem 0 .2rem 1.2rem; position: relative; line-height: 1.5; }
+  ul.items li::before { position: absolute; left: 0; }
+  .pro-list ul.items li::before { content: "✓"; color: var(--pro); font-weight: 700; }
+  .con-list ul.items li::before { content: "✗"; color: var(--con); font-weight: 700; }
+
+  /* ── Tables ── */
+  .tbl-wrap { overflow-x: auto; margin: 1rem 0; border-radius: 10px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  thead tr { background: var(--card); }
+  th { padding: .65rem .9rem; text-align: left; color: var(--muted); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: .6rem .9rem; border-bottom: 1px solid rgba(46,51,80,.5); vertical-align: top; line-height: 1.5; }
+  tr:last-child td { border-bottom: none; }
+  td.dim { color: var(--muted); font-size: .82rem; white-space: nowrap; }
+  td .yes { color: var(--pro); font-weight: 700; }
+  td .no  { color: var(--muted); }
+  td .partial { color: var(--warn); font-weight: 600; }
+  td .lbl-dlr { color: var(--accent1); font-weight: 600; }
+  td .lbl-prs { color: var(--accent2); font-weight: 600; }
+  td .lbl-pf  { color: var(--accent3); font-weight: 600; }
+
+  /* ── Code ── */
+  code {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: .83rem; background: var(--code-bg);
+    border-radius: 4px; padding: .12em .38em; color: #a8b4f8;
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1rem 1.2rem; overflow-x: auto;
+    font-size: .82rem; color: #c8d0f8; line-height: 1.6; margin: .7rem 0 1rem;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  }
+  pre .cm { color: var(--muted); }  /* comment */
+  pre .kw { color: #bb86fc; }       /* keyword */
+  pre .st { color: #86efac; }       /* string */
+  pre .nu { color: #fbbf24; }       /* number */
+  pre .fn { color: #60a5fa; }       /* function */
+
+  /* ── Pipeline flow diagram ── */
+  .pipeline-flow {
+    display: flex; align-items: center; flex-wrap: wrap; gap: .4rem;
+    padding: 1.5rem; background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; margin: 1.2rem 0;
+  }
+  .pf-step {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 7px; padding: .45rem .9rem; font-size: .8rem;
+    font-weight: 600; color: var(--text); white-space: nowrap;
+  }
+  .pf-arrow { color: var(--muted); font-size: 1rem; }
+
+  /* ── Score formula ── */
+  .formula {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.1rem 1.4rem; font-family: 'Cascadia Code', monospace;
+    font-size: .86rem; color: #c8d0f8; line-height: 2;
+  }
+  .formula .w  { color: #fbbf24; font-weight: 700; }
+  .formula .comp { color: #60a5fa; }
+  .formula .op { color: var(--muted); }
+
+  /* ── Insight box ── */
+  .insight {
+    background: rgba(79,156,249,.08); border-left: 3px solid var(--accent1);
+    border-radius: 0 8px 8px 0; padding: .8rem 1rem; margin: 1rem 0;
+    font-size: .9rem; color: var(--text);
+  }
+  .insight strong { color: var(--accent1); }
+
+  .warn-box {
+    background: rgba(249,199,79,.08); border-left: 3px solid var(--warn);
+    border-radius: 0 8px 8px 0; padding: .8rem 1rem; margin: 1rem 0;
+    font-size: .9rem; color: var(--text);
+  }
+  .warn-box strong { color: var(--warn); }
+
+  /* ── Matrix ── */
+  .matrix-yes  { text-align: center; }
+  .matrix-no   { text-align: center; color: var(--muted); }
+  td.matrix-yes span { background: rgba(80,216,144,.15); color: var(--pro); border-radius: 4px; padding: .1rem .4rem; font-size: .82rem; font-weight: 700; }
+  td.matrix-no  span { background: rgba(46,51,80,.5); color: var(--muted); border-radius: 4px; padding: .1rem .4rem; font-size: .82rem; }
+  td.matrix-partial span { text-align: center; background: rgba(249,199,79,.12); color: var(--warn); border-radius: 4px; padding: .1rem .4rem; font-size: .82rem; font-weight: 700; }
+
+  /* ── Synthesis cards ── */
+  .synth-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.2rem 1.4rem; margin-bottom: .9rem;
+  }
+  .synth-card .synth-num {
+    display: inline-block; background: var(--accent1); color: #fff;
+    border-radius: 5px; padding: .1rem .5rem; font-size: .75rem; font-weight: 800;
+    margin-bottom: .5rem;
+  }
+  .synth-card h4 { margin-top: .4rem; text-transform: none; font-size: .95rem; color: var(--heading); letter-spacing: 0; }
+  .synth-card p  { font-size: .88rem; margin-top: .35rem; }
+
+  /* ── Section intro ── */
+  .section-intro { color: var(--muted); font-size: .9rem; margin-bottom: 1.4rem; }
+
+  /* ── Divider label ── */
+  .divider-label {
+    display: flex; align-items: center; gap: .8rem; margin: 2rem 0 1.2rem;
+  }
+  .divider-label span {
+    font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+    white-space: nowrap;
+  }
+  .divider-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center; padding: 2rem; font-size: .8rem; color: var(--muted);
+    border-top: 1px solid var(--border); margin-top: 4rem;
+  }
+
+  /* ── Research principle box ── */
+  .rp-box {
+    background: rgba(187,134,252,.07); border-left: 3px solid #bb86fc;
+    border-radius: 0 8px 8px 0; padding: .8rem 1rem; margin: 1rem 0;
+    font-size: .88rem; color: var(--text);
+  }
+  .rp-box strong { color: #bb86fc; }
+  .rp-box .rp-src { display: block; font-size: .78rem; color: var(--muted); margin-top: .3rem; }
+
+  /* ── Layer badge ── */
+  .layer-row { display: flex; gap: .6rem; flex-wrap: wrap; margin: .8rem 0 1.2rem; }
+  .layer-badge {
+    border-radius: 6px; padding: .3rem .8rem; font-size: .78rem; font-weight: 700;
+    letter-spacing: .04em; border: 1px solid;
+  }
+  .layer-badge.acq  { color: var(--accent1); border-color: rgba(79,156,249,.4); background: rgba(79,156,249,.08); }
+  .layer-badge.cur  { color: var(--accent2); border-color: rgba(249,123,79,.4); background: rgba(249,123,79,.08); }
+  .layer-badge.pres { color: var(--accent3); border-color: rgba(80,216,144,.4); background: rgba(80,216,144,.08); }
+
+  /* ── Language toggle ── */
+  #lang-toggle {
+    margin-left: auto; background: var(--card); color: var(--heading);
+    border: 1px solid var(--border); border-radius: 6px; padding: .25rem .7rem;
+    font-size: .78rem; font-weight: 700; cursor: pointer; letter-spacing: .04em;
+    transition: background .15s, color .15s;
+  }
+  #lang-toggle:hover { background: var(--accent1); color: #fff; border-color: var(--accent1); }
+</style>
+</head>
+<body>
+
+<!-- ────────────────────────── NAVIGATION ────────────────────────── -->
+<nav>
+  <span class="logo" data-zh="⚙ 基线对比">⚙ Baseline Comparison</span>
+  <a href="#overview" data-zh="概述">Overview</a>
+  <a href="#literature" data-zh="文献基础">Literature</a>
+  <a href="#config" data-zh="1 · 配置">1 · Config</a>
+  <a href="#query" data-zh="2 · 查询">2 · Query</a>
+  <a href="#fetch" data-zh="3 · 抓取">3 · Fetch</a>
+  <a href="#normalize" data-zh="4 · 归一化">4 · Normalize</a>
+  <a href="#identity" data-zh="5 · 身份解析">5 · Identity</a>
+  <a href="#dedup" data-zh="6 · 去重">6 · Dedup</a>
+  <a href="#score" data-zh="7 · 评分">7 · Score</a>
+  <a href="#filter" data-zh="8 · 过滤">8 · Filter</a>
+  <a href="#persist" data-zh="9 · 持久化">9 · Persist</a>
+  <a href="#publish" data-zh="10 · 发布">10 · Publish</a>
+  <a href="#loop" data-zh="11 · 循环控制">11 · Loop</a>
+  <a href="#matrix" data-zh="对比矩阵">Matrix</a>
+  <a href="#synthesis" data-zh="综合建议">Synthesis</a>
+  <button id="lang-toggle" onclick="toggleLang()">中文</button>
+</nav>
+
+<main>
+
+<!-- ────────────────────────── HERO ────────────────────────── -->
+<div class="hero" id="overview">
+  <h1 data-zh="基线对比">Baseline Comparison</h1>
+  <p class="sub" data-zh="三个确定性文献检索流水线的逐步技术分析">A step-by-step technical breakdown of three deterministic literature-retrieval pipelines</p>
+  <div class="pill-row">
+    <span class="pill dlr">◉ Dynamic-LR &nbsp;(this repo)</span>
+    <span class="pill prs">◉ PRS &nbsp;cherryann518/paper-retrieval-system</span>
+    <span class="pill pf">◉ PF &nbsp;WoosungLim01/Paper-Feed</span>
+  </div>
+</div>
+
+<!-- Pipeline flow -->
+<section style="padding-top:2.5rem; padding-bottom:0; border:none;">
+  <h3 style="margin-top:0;" data-zh="共享流水线骨架">Shared Pipeline Skeleton</h3>
+  <div class="pipeline-flow">
+    <span class="pf-step" data-zh="调查配置">Survey Config</span><span class="pf-arrow">→</span>
+    <span class="pf-step" data-zh="查询生成">Query Generation</span><span class="pf-arrow">→</span>
+    <span class="pf-step" data-zh="API 抓取">API Fetch</span><span class="pf-arrow">→</span>
+    <span class="pf-step" data-zh="归一化">Normalize</span><span class="pf-arrow">→</span>
+    <span class="pf-step" data-zh="身份解析">Identity Resolution</span><span class="pf-arrow">→</span>
+    <span class="pf-step" data-zh="去重">Deduplication</span><span class="pf-arrow">→</span>
+    <span class="pf-step" data-zh="相关性评分">Relevance Scoring</span><span class="pf-arrow">→</span>
+    <span class="pf-step" data-zh="过滤">Filtering</span><span class="pf-arrow">→</span>
+    <span class="pf-step" data-zh="持久化">Persist</span><span class="pf-arrow">→</span>
+    <span class="pf-step" data-zh="发布">Publish</span><span class="pf-arrow">→</span>
+    <span class="pf-step" data-zh="循环控制">Loop Control</span>
+  </div>
+  <p style="font-size:.85rem; color:var(--muted);" data-zh="三个系统大致遵循上述顺序。差异完全体现在每一步的<em>实现方式</em>上——深度、策略和工程选择在多轮运行的流水线中不断积累影响。">All three systems follow roughly this order. The differences lie entirely in <em>how</em> each step is implemented — depth, strategy, and engineering choices that compound across a multi-run pipeline.</p>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     LITERATURE GROUNDING
+═══════════════════════════════════════════════════════════ -->
+<section id="literature">
+  <h2 data-zh="文献基础">Literature Grounding</h2>
+  <p class="section-intro" data-zh="三篇关于AI辅助系统性综述的近期论文为 Dynamic-LR 的设计提供了研究背景。其关键发现约束了每个流水线步骤的实现方式，以及三个系统在哪些方面偏离了最佳实践。">Three recent papers on AI-assisted systematic review provide the research context for Dynamic-LR's design. Their key findings constrain how each pipeline step should be implemented — and where the three systems diverge from best practice.</p>
+
+  <div class="card-row cols3">
+    <div class="card">
+      <h3 style="font-size:.95rem;">InsightAgent</h3>
+      <p style="color:var(--muted); font-size:.78rem; margin-bottom:.5rem;">Qiu et al., 2025 · arXiv:2504.14822</p>
+      <p data-zh="证明了系统性综述受益于<strong>溯源图谱</strong>：每个高层次结论都链接到论文级别的证据。在并行处理前进行语义分区，以及隔离的各子域记忆，可减少混淆错误。人工覆盖必须<em>作为新决策事件存储</em>，而不是静默覆盖先前的选择。">Demonstrates that systematic review benefits from a <strong>provenance graph</strong>: every high-level claim links back to paper-level evidence. Semantic partitioning before parallel work and isolated per-subdomain memory reduce conflation errors. Human overrides must be <em>stored as new decision events</em>, never silently overwriting prior choices.</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:.95rem;">Agentic AutoSurvey</h3>
+      <p style="color:var(--muted); font-size:.78rem; margin-bottom:.5rem;">Liu et al., 2025 · arXiv:2509.18661</p>
+      <p data-zh="表明在大型语料库上，平铺式单遍综合质量下降——需要层次化聚合。确立了多源检索、带 TTL 的显式缓存、指数退避加抖动，以及 12 维质量评分体系的价值。<strong>警告</strong>不要仅凭标题相似性去重，也不要以自我报告质量作为唯一评估指标。">Shows that flat, single-pass synthesis degrades on large corpora — hierarchical aggregation is needed. Establishes the value of multi-source retrieval, explicit caching with TTL, exponential backoff with jitter, and a 12-dimensional quality rubric. <strong>Warns</strong> against title-similarity-only deduplication and self-reported quality as the sole evaluator.</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:.95rem;">LatteReview</h3>
+      <p style="color:var(--muted); font-size:.78rem; margin-bottom:.5rem;">Rouzrokh et al., 2025 · arXiv:2501.05468</p>
+      <p data-zh="引入了<strong>轮次工作流模式</strong>：元数据过滤 → 标题/摘要筛查 → 冲突解决 → 证据提取。提供者抽象、有类型的输入/输出、条件升级和异步批量执行是其最具移植价值的理念。提醒结果因任务和纳入率而异——高 AUC 并不能消除稀有纳入场景中的低精确率。">Introduces a <strong>round-based workflow schema</strong>: metadata filter → title/abstract screen → conflict resolution → evidence extraction. Provider abstraction, typed inputs/outputs, conditional escalation, and async batch execution are its most transferable ideas. Cautions that results vary by task and inclusion prevalence — a high AUC does not eliminate low precision in rare-inclusion settings.</p>
+    </div>
+  </div>
+
+  <div class="divider-label"><span data-zh="三层架构原则">Three-Layer Architecture Principle</span></div>
+
+  <p data-zh="三篇论文在一个共同的结构原则上达成一致——严格区分以下三个层次：">All three papers converge on a common structural principle — keep these three layers strictly separate:</p>
+  <div class="layer-row">
+    <span class="layer-badge acq" data-zh="采集层">Acquisition</span>
+    <span class="layer-badge cur" data-zh="筛选层">Curation</span>
+    <span class="layer-badge pres" data-zh="呈现层">Presentation</span>
+  </div>
+  <div class="card-row cols3">
+    <div class="card">
+      <div class="layer-badge acq" style="margin-bottom:.6rem;" data-zh="采集层">Acquisition</div>
+      <p data-zh="数据源查询、原始 API 载荷、速率限制、缓存、归一化、标识符解析、去重。<strong>此处不作相关性判断。</strong>">Source queries, raw API payloads, rate limiting, caching, normalization, identifier resolution, deduplication. <strong>No relevance judgment here.</strong></p>
+    </div>
+    <div class="card">
+      <div class="layer-badge cur" style="margin-bottom:.6rem;" data-zh="筛选层">Curation</div>
+      <p data-zh="相关性评分、纳入/排除决策、主题聚类、证据提取、矛盾标记、用户覆盖。<strong>此处不直接调用 API。</strong>">Relevance scoring, inclusion/exclusion decisions, topic clusters, evidence extraction, contradiction flags, user overrides. <strong>No raw API calls here.</strong></p>
+    </div>
+    <div class="card">
+      <div class="layer-badge pres" style="margin-bottom:.6rem;" data-zh="呈现层">Presentation</div>
+      <p data-zh="静态站点数据、语料库视图、导出文件、综述草稿、审计报告。<strong>任何产物都不能成为唯一真相来源。</strong>数据库和运行产物具有权威性。">Static site data, corpus views, exports, survey draft, audit reports. <strong>No artifact may be the sole source of truth.</strong> The database and run artifacts are authoritative.</p>
+    </div>
+  </div>
+
+  <div class="divider-label"><span data-zh="规范数据契约">Canonical Data Contracts</span></div>
+  <p data-zh="文献要求所有架构一致写入五种结构化记录类型：">The literature mandates five structured record types that all architectures should write consistently:</p>
+
+  <div class="tbl-wrap"><table>
+    <thead><tr>
+      <th>Record</th><th>Key Fields</th><th>Why it matters</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td><code>PaperRecord</code></td>
+        <td><code>paper_key</code>, <code>identifiers</code> (doi/arxiv/s2/openalex), title, abstract, authors, year, venue, citation_count, first_seen_run_id</td>
+        <td>Canonical identity anchor across all sources and all runs</td>
+      </tr>
+      <tr>
+        <td><code>RetrievalEvent</code></td>
+        <td><code>run_id</code>, <code>query_id</code>, <code>query_origin</code> (config|template|agent), source, source_rank, cache_status, raw_payload_hash</td>
+        <td>Makes retrieval coverage and query effectiveness measurable and replayable</td>
+      </tr>
+      <tr>
+        <td><code>ScreeningDecision</code></td>
+        <td><code>paper_key</code>, stage (metadata_filter|baseline_score|agent_review|human_override), decision (include|exclude|needs_review|defer), score, criteria_version, brief_rationale, decision_source (rule|model|human)</td>
+        <td>Typed, inspectable, comparable across architectures</td>
+      </tr>
+      <tr>
+        <td><code>EvidenceUnit</code></td>
+        <td>finding, method, result, limitation; points to <code>paper_key</code> and source span; parent links to ClusterSynthesis → SurveySection</td>
+        <td>Enables correction and regeneration without losing corpus history</td>
+      </tr>
+      <tr>
+        <td><code>RunManifest</code></td>
+        <td>architecture, git commit, config hash, query plan, cache policy, start/end, artifacts written, failures, retry counts, final status</td>
+        <td>Makes runs reproducible and comparable across architectures</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="divider-label"><span data-zh="评估框架">Evaluation Framework</span></div>
+  <p data-zh="为进行公平的基线与智能体对比，文献推荐两种互补模式：">For fair baseline-vs-agent comparison the literature recommends two complementary modes:</p>
+  <div class="card-row cols2">
+    <div class="card">
+      <h4 data-zh="冻结语料库对比">Frozen-Corpus Comparison</h4>
+      <p data-zh="构建一份归一化、去重的语料库快照，然后将同一快照和接受标准提供给所有架构。这将筛选、组织和综合决策与检索差异隔离开来。">Build one normalized, deduplicated corpus snapshot, then feed the same snapshot and acceptance criteria to all architectures. This isolates screening, organization, and synthesis decisions from retrieval variance.</p>
+    </div>
+    <div class="card">
+      <h4 data-zh="端到端检索对比">End-to-End Retrieval Comparison</h4>
+      <p data-zh="在相同配置和时间窗口下运行每个架构。记录：数据源覆盖率、查询数量、唯一候选论文、去重行为、接受记录数、运行时间、API 调用次数、缓存命中、重试、失败——以及在有基准真相时的目标论文召回率。">Run each architecture from the same config and time window. Record: source coverage, query count, unique candidates, deduplication behavior, accepted records, runtime, API calls, cache hits, retries, failures — and target-paper recall when ground truth is available.</p>
+    </div>
+  </div>
+
+  <div class="rp-box">
+    <strong data-zh="研究原则：">Research Principle:</strong> <span data-zh="不要仅仅比较文字质量。一个能写出好看综述但无法复现来源纳入、引用和运行状态的系统，不是可信的研究流水线。Dynamic-LR 的结构化运行产物和 SQLite 持久化是此类对比的先决条件——而非可选项。">Do not compare only prose quality. A system that writes a good-looking survey but cannot reproduce source inclusion, citations, and run state is not a credible research pipeline. Dynamic-LR's structured run artifacts and SQLite persistence are prerequisites for this kind of comparison — not optional extras.</span>
+    <span class="rp-src">— Derived from Agentic AutoSurvey §5, LatteReview §4.2, InsightAgent §6</span>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     STEP 1 · SURVEY CONFIG
+═══════════════════════════════════════════════════════════ -->
+<section id="config">
+  <h2><span class="step-badge">STEP 1</span> <span data-zh="调查配置加载">Survey Config Loading</span></h2>
+  <p class="section-intro" data-zh="三个系统都从 <code>survey_config.json</code> 文件读取配置。配置数据类的设计决定了流水线其余部分可以使用哪些信息。">All three systems read from a <code>survey_config.json</code> file. The design of the config dataclass determines what the rest of the pipeline can use.</p>
+
+  <div class="card-row cols3">
+    <div class="sys-card dlr">
+      <div class="sys-title">Dynamic-LR</div>
+      <p data-zh="配置以 Pydantic/dataclass 形式存储在共享的 <code>app/state/schemas.py</code> 的 <code>SurveyConfig</code> 中。读取 <code>topic_overview</code>、<code>research_questions</code>、<code>question_context</code>、<code>query_hints</code>、<code>timeline_from_year</code>、<code>timeline_to_year</code>、<code>min_relevance_score</code>，以及可选的 <code>baseline</code> 字典，用于架构特定设置（如 <code>max_queries</code>、<code>max_results_per_query</code>、<code>enable_sqlite</code>）。未知字段被静默忽略——配置具有向前兼容性。">Config is stored in the shared <code>app/state/schemas.py</code> as a Pydantic/dataclass <code>SurveyConfig</code>. Reads <code>topic_overview</code>, <code>research_questions</code>, <code>question_context</code>, <code>query_hints</code>, <code>timeline_from_year</code>, <code>timeline_to_year</code>, <code>min_relevance_score</code>, and an optional <code>baseline</code> dict for architecture-specific settings like <code>max_queries</code>, <code>max_results_per_query</code>, <code>enable_sqlite</code>. Unknown fields are silently ignored — the config is forward-compatible.</p>
+    </div>
+    <div class="sys-card prs">
+      <div class="sys-title">PRS</div>
+      <p data-zh="<code>src/fetch.py</code> 中的 <code>SurveyConfig</code> 数据类。加载 <code>topic_overview</code>、<code>timeline_from_year</code>、<code>timeline_to_year</code>、<code>fields_of_study</code>、<code>min_relevance_score</code>、<code>max_candidates_per_run</code>、<code>sources</code> 和 <code>rank_method</code>。研究问题和提示有意不在模式中——系统依赖单一主题字符串，由 LLM 进行细化。也可通过 CLI 的 <code>--topic</code> 覆盖配置。"><code>SurveyConfig</code> dataclass in <code>src/fetch.py</code>. Loads <code>topic_overview</code>, <code>timeline_from_year</code>, <code>timeline_to_year</code>, <code>fields_of_study</code>, <code>min_relevance_score</code>, <code>max_candidates_per_run</code>, <code>sources</code>, and <code>rank_method</code>. Research questions and hints are intentionally not part of the schema — the system relies on a single topic string and uses the LLM to refine it. Config can also be overridden at CLI via <code>--topic</code>.</p>
+    </div>
+    <div class="sys-card pf">
+      <div class="sys-title">PF</div>
+      <p data-zh="<code>app/config.py</code> 中的 <code>SurveyConfig</code> 数据类。加载 <code>topic_overview</code>、<code>research_questions</code>、<code>question_context</code>、<code>query_hints</code>、<code>timeline_from_year</code>、<code>timeline_to_year</code>、<code>min_relevance_score</code>，以及 <code>search_keywords</code> 字段（缺省时回退到 <code>query_hints</code>）。CLI 支持 <code>--topic</code>、<code>--days-back</code> 和 <code>--days-buffer</code> 覆盖。配置严格——缺少必填字段将抛出 <code>KeyError</code>。"><code>SurveyConfig</code> dataclass in <code>app/config.py</code>. Loads <code>topic_overview</code>, <code>research_questions</code>, <code>question_context</code>, <code>query_hints</code>, <code>timeline_from_year</code>, <code>timeline_to_year</code>, <code>min_relevance_score</code>, and a <code>search_keywords</code> field (falls back to <code>query_hints</code> if absent). CLI supports <code>--topic</code>, <code>--days-back</code>, and <code>--days-buffer</code> overrides. Config is strict — missing required fields will throw a <code>KeyError</code>.</p>
+    </div>
+  </div>
+
+  <div class="divider-label"><span data-zh="关键差异">Key Differences</span></div>
+
+  <div class="card">
+    <h3 data-zh="架构特定配置块">Architecture-specific config block</h3>
+    <p data-zh="只有 <span class='tag-dlr'>Dynamic-LR</span> 支持配置 JSON 中可选的 <code>&quot;baseline&quot;: { ... }</code> 子对象。这意味着基线特定设置（最大查询数、使用批量搜索、SQLite 路径）与调查设置共存，而不会污染共享模式。PRS 和 PF 没有这种分离——所有设置都是扁平全局的。">Only <span class="tag-dlr">Dynamic-LR</span> supports an optional <code>"baseline": { ... }</code> sub-object in the config JSON. This means baseline-specific settings (max queries, use bulk search, SQLite path) live next to survey settings without polluting shared schema. PRS and PF have no such separation — all settings are flat and global.</p>
+    <div class="pro-con">
+      <div class="pro-list"><h5 data-zh="优点 — Dynamic-LR 方式">Pros — Dynamic-LR approach</h5><ul class="items">
+        <li data-zh="架构特定调优不会破坏其他架构">Architecture-specific tuning without breaking other architectures</li>
+        <li data-zh="配置文件明确记录了基线流水线使用的内容">Config file documents exactly what the baseline pipeline uses</li>
+        <li data-zh="安全默认值意味着该块可以完全省略">Safe defaults mean the block can be omitted entirely</li>
+      </ul></div>
+      <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+        <li data-zh="嵌套配置略难读取和记录">Nested config is slightly harder to read and document</li>
+        <li data-zh="需要流水线安全地处理可选嵌套键">Requires the pipeline to safely navigate optional nested keys</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 data-zh="配置中的研究问题">Research questions in config</h3>
+    <p data-zh="<span class='tag-dlr'>Dynamic-LR</span> 和 <span class='tag-pf'>PF</span> 都将 <code>research_questions</code> 作为一等配置字段，并在下游使用（用于评分或查询生成）。<span class='tag-prs'>PRS</span> 忽略它们——其意图是让 LLM 从单一主题字符串衍生多样化查询，而不是由用户逐一列举。"><span class="tag-dlr">Dynamic-LR</span> and <span class="tag-pf">PF</span> both include <code>research_questions</code> as first-class config fields and use them downstream (for scoring or query generation). <span class="tag-prs">PRS</span> ignores them — the intent is that the LLM should derive diverse queries from a single topic string rather than having the user enumerate them.</p>
+    <div class="pro-con">
+      <div class="pro-list"><h5 data-zh="优点 — 纳入研究问题">Pros — including research questions</h5><ul class="items">
+        <li data-zh="每个问题直接映射为一个有针对性的 API 查询">Each question maps directly to a targeted API query</li>
+        <li data-zh="评分查询文本更丰富——摘要与实际研究意图进行比较">Scoring query text is richer — abstracts are compared against the actual research intent</li>
+        <li data-zh="使检索意图明确且可审计">Makes the retrieval intent explicit and auditable</li>
+      </ul></div>
+      <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+        <li data-zh="用户必须写出好问题；劣质问题会降低查询质量">User must write good questions; poor questions degrade query quality</li>
+        <li data-zh="长问题作为逐字搜索查询表现不佳（通过查询清洗来解决）">Long questions perform poorly as verbatim search queries (addressed by query cleaning)</li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     STEP 2 · QUERY GENERATION
+═══════════════════════════════════════════════════════════ -->
+<section id="query">
+  <h2><span class="step-badge">STEP 2</span> <span data-zh="查询生成">Query Generation</span></h2>
+  <p class="section-intro" data-zh="查询的质量和多样性是影响检索覆盖率最可控的单一杠杆。不同策略在多样性、确定性和相关性信号之间做出根本不同的权衡。">The quality and diversity of queries is the single most controllable lever for retrieval coverage. Different strategies make fundamentally different trade-offs between diversity, determinism, and relevance signal.</p>
+
+  <div class="card-row cols3">
+    <div class="sys-card dlr">
+      <div class="sys-title">Dynamic-LR — <code>query_builder.py</code></div>
+      <p data-zh="从四个来源生成最多 <code>max_queries</code> 个查询：(1) <code>topic_overview</code>，(2) 每个 <code>research_question</code>，(3) 每个 <code>query_hint</code>，(4) 一个<em>组合查询</em>——从所有配置字段中按频率排名提取前 N 个非停用词词元，同频时按字母顺序排列以保证可复现性。所有查询均经过清洗（控制字符、空白折叠、长度上限）并不区分大小写去重，保留首次出现顺序。">Generates up to <code>max_queries</code> from four sources: (1) <code>topic_overview</code>, (2) each <code>research_question</code>, (3) each <code>query_hint</code>, (4) a <em>combined query</em> built from the top-N non-stopword tokens across all config fields ranked by frequency, with ties broken alphabetically for reproducibility. All queries are cleaned (control chars, whitespace collapse, length cap) and deduplicated case-insensitively with first-occurrence order preserved.</p>
+    </div>
+    <div class="sys-card prs">
+      <div class="sys-title">PRS — <code>src/agent.py</code></div>
+      <p data-zh="从单一主题字符串开始。ML 缩写扩展表在第一次搜索前解析缩写（例如 <code>rag → retrieval augmented generation</code>）。评分后，若结果低于阈值，Ollama LLM 会根据失败原因生成修订查询。最多可重复 <code>MAX_REFINEMENT_ROUNDS=2</code> 次。若无 Ollama，则仅执行一次固定查询。">Starts with a single topic string. An ML acronym expansion table resolves abbreviations before the first search (e.g. <code>rag → retrieval augmented generation</code>). After scoring, if results are below threshold, an Ollama LLM generates a revised query based on why results failed. This can repeat up to <code>MAX_REFINEMENT_ROUNDS=2</code> times. Without Ollama, the search is a single fixed query.</p>
+    </div>
+    <div class="sys-card pf">
+      <div class="sys-title">PF — <code>app/fetcher.py</code></div>
+      <p data-zh="仅使用 <code>search_keywords</code>（无则回退到 <code>query_hints</code>）。研究问题被明确排除——注释指出它们是"自然语言，不适合 API 搜索"。每个关键词变为一个查询。通过 <code>dict.fromkeys</code> 保留插入顺序进行去重。无组合查询，无主题扩展。最小预处理：通过正则表达式在发送前去除标点。">Uses only <code>search_keywords</code> (or <code>query_hints</code> as fallback). Research questions are explicitly excluded — the comment notes they are "natural language, not suitable for API search." Each keyword becomes one query. Deduplication preserves insertion order via <code>dict.fromkeys</code>. No combined query. No topic expansion. Minimal pre-processing: punctuation stripped via regex before sending.</p>
+    </div>
+  </div>
+
+  <div class="divider-label"><span data-zh="深度分析">Deep Dive</span></div>
+
+  <h3 data-zh="Dynamic-LR — 组合查询">Dynamic-LR — The Combined Query</h3>
+  <p data-zh="组合查询是最具特色的元素。它不是发送完整的主题字符串，而是从所有配置字段中提取信息密度最高的词元：">The combined query is the most distinctive element. Rather than sending the full topic string, it extracts the most informationally dense tokens across all config fields:</p>
+  <pre><span class="cm"># Sort by (-count, token) — stable, deterministic</span>
+ranked = sorted(counter.items(), key=<span class="kw">lambda</span> kv: (-kv[<span class="nu">1</span>], kv[<span class="nu">0</span>]))
+top = [tok <span class="kw">for</span> tok, _ <span class="kw">in</span> ranked[:max_tokens]]
+combined = <span class="st">" "</span>.join(top)</pre>
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="优点">Pros</h5><ul class="items">
+      <li data-zh="紧凑、高密度查询——避免在停用词上浪费词元预算">Compact, high-density query — avoids token budget waste on stopwords</li>
+      <li data-zh="跨字段信号：同时出现在主题和问题中的词获得提升">Cross-field signal: terms that appear in both topic and questions get boosted</li>
+      <li data-zh="完全确定性——相同配置始终产生相同的组合查询">Fully deterministic — same config always yields the same combined query</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+      <li data-zh="失去词序和措辞——关键词堆砌可能匹配不相关论文">Loses word order and phrasing — keyword soup may match unrelated papers</li>
+      <li data-zh="即使高度相关，短摘要也可能不包含单个词元">Short abstracts may not contain individual tokens even when highly relevant</li>
+      <li data-zh="高频词元可能是显而易见的词（如"learning"），反而增加噪音">Top-frequency tokens may be obvious terms (e.g. "learning") that add noise</li>
+    </ul></div>
+  </div>
+
+  <h3 data-zh="PRS — LLM 驱动的精化循环">PRS — LLM-Driven Refinement Loop</h3>
+  <p data-zh="PRS 的 Ollama 调用在分析当前批次评分不佳的原因后，生成新的搜索字符串。四种失败模式触发不同的提示词：">PRS's Ollama call produces a new search string after examining why the current batch scored poorly. Four failure modes trigger different prompt hints:</p>
+  <pre>REFINEMENT_HINTS = {
+    <span class="st">"no_papers"</span>:          <span class="st">"Broaden the query..."</span>,
+    <span class="st">"top_score_low"</span>:      <span class="st">"Rephrase using precise technical terms..."</span>,
+    <span class="st">"too_few_good_papers"</span>:<span class="st">"Try synonyms, abbreviations..."</span>,
+    <span class="st">"flat_scores"</span>:        <span class="st">"Narrow the query to a specific method..."</span>,
+}</pre>
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="优点">Pros</h5><ul class="items">
+      <li data-zh="自适应——初次结果不佳不会终止运行">Adaptive — poor first results don't end the run</li>
+      <li data-zh="能从指定不足或过于宽泛的初始查询中恢复">Can recover from under-specified or over-broad initial queries</li>
+      <li data-zh="生成静态列表会遗漏的领域特定同义词">Produces domain-specific synonyms a static list would miss</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+      <li data-zh="非确定性——两次相同的运行可能产生不同的查询和结果">Non-deterministic — two identical runs may produce different queries and results</li>
+      <li data-zh="需要运行中的 Ollama 实例；不可用时静默回退至无精化">Requires a running Ollama instance; unavailability silently falls back to no refinement</li>
+      <li data-zh="LLM 可能漂移至相邻领域（如"RAG"→生物学而非检索）">LLM may drift to adjacent domains (e.g. "RAG" → biology instead of retrieval)</li>
+      <li data-zh="违反本项目的基线规则">Violates baseline rules for this project</li>
+    </ul></div>
+  </div>
+
+  <h3 data-zh="PF — 仅关键词策略">PF — Keyword-Only Strategy</h3>
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="优点">Pros</h5><ul class="items">
+      <li data-zh="短小精悍的查询在 S2 等元数据搜索 API 上表现良好">Short, clean queries perform well on metadata-search APIs like S2</li>
+      <li data-zh="无需问题到查询的转换">No question-to-query translation required</li>
+      <li data-zh="简单且可预测">Simple and predictable</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+      <li data-zh="研究问题（通常包含最丰富的意图信号）未被使用">Research questions (which often contain the richest intent signal) are unused</li>
+      <li data-zh="没有组合查询意味着重要的跨字段词语组合从未被尝试">No combined query means important cross-field term combinations are never tried</li>
+      <li data-zh="覆盖范围受限于用户写了多少显式关键词">Coverage is bounded by however many explicit keywords the user wrote</li>
+    </ul></div>
+  </div>
+
+  <div class="insight"><strong data-zh="洞察：">Insight:</strong> <span data-zh="Dynamic-LR 自动从单一配置生成 3–12 个查询。PF 仅生成与显式关键词数量相同的查询。PRS 生成 1–3 个但对其进行自适应。对于固定配置的自动化流水线，Dynamic-LR 的策略在无任何 LLM 依赖的情况下提供了最佳的每配置字段覆盖率比。">Dynamic-LR generates 3–12 queries from a single config automatically. PF generates only as many as explicit keywords. PRS generates 1–3 but adapts them. For a fixed-config automated pipeline, Dynamic-LR's strategy provides the best coverage-per-config-field ratio without any LLM dependency.</span></div>
+
+  <div class="rp-box">
+    <strong data-zh="研究原则 — 检索是以召回为导向的：">Research Principle — Retrieval is recall-oriented:</strong> <span data-zh="LatteReview 明确指出，数据库过滤器和精心设计的查询应处理不需要 AI 的条件。基线必须用 <code>query_origin</code> 标签（<code>config|deterministic_template|agent</code>）记录每个查询，以便在架构对比运行中衡量检索覆盖率和查询有效性。">LatteReview explicitly states that database filters and careful queries should handle conditions that do not require AI. The baseline must log every query with a <code>query_origin</code> tag (<code>config|deterministic_template|agent</code>) so that retrieval coverage and query effectiveness are measurable across architecture comparison runs.</span>
+    <span class="rp-src">— LatteReview §3.1; Agentic AutoSurvey §3.2; Dynamic-LR agent context §4.1</span>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     STEP 3 · API FETCH
+═══════════════════════════════════════════════════════════ -->
+<section id="fetch">
+  <h2><span class="step-badge">STEP 3</span> <span data-zh="API 抓取与数据源覆盖">API Fetch &amp; Source Coverage</span></h2>
+  <p class="section-intro" data-zh="抓取步骤决定了候选论文的数量和多样性。数据源广度、分页策略和 API 客户端健壮性在此处共同积累影响。">The fetch step determines how many and how diverse the candidate papers are. Source breadth, pagination strategy, and API client robustness all compound here.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>Dimension</th>
+        <th class="lbl-dlr">Dynamic-LR</th>
+        <th class="lbl-prs">PRS</th>
+        <th class="lbl-pf">PF</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="dim" data-zh="数据源">Sources</td>
+          <td data-zh="仅 S2">S2 only</td>
+          <td>S2 + arXiv</td>
+          <td>S2 + arXiv + OpenAlex</td></tr>
+        <tr><td class="dim" data-zh="并发">Concurrency</td>
+          <td data-zh="顺序（同步）">Sequential (sync)</td>
+          <td data-zh="顺序（同步）">Sequential (sync)</td>
+          <td><span class="yes" data-zh="asyncio.gather — 3 源并行">asyncio.gather — all 3 in parallel</span></td></tr>
+        <tr><td class="dim">HTTP library</td>
+          <td><code>urllib</code> (stdlib)</td>
+          <td><code>urllib</code> (stdlib)</td>
+          <td><code>httpx</code> (async)</td></tr>
+        <tr><td class="dim" data-zh="429 处理">429 handling</td>
+          <td data-zh="可配置等待">Configurable wait</td>
+          <td><span class="yes" data-zh="Retry-After 头 + 指数退避 + 抖动">Retry-After header + exp backoff + jitter</span></td>
+          <td data-zh="固定 60 秒睡眠">Fixed 60 s sleep</td></tr>
+        <tr><td class="dim" data-zh="5xx 重试">5xx retry</td>
+          <td><span class="yes" data-zh="是">Yes</span></td>
+          <td><span class="no" data-zh="否">No</span></td>
+          <td><span class="no" data-zh="否">No</span></td></tr>
+        <tr><td class="dim" data-zh="响应缓存">Response cache</td>
+          <td><span class="yes" data-zh="SQLite api_cache（含 TTL）">SQLite api_cache (with TTL)</span></td>
+          <td data-zh="每请求哈希一个文件（无 TTL）">File per request hash (no TTL)</td>
+          <td><span class="no" data-zh="无">None</span></td></tr>
+        <tr><td class="dim" data-zh="日期范围过滤">Date-range filter</td>
+          <td data-zh="年份窗口作为 API 参数">Year window as API param</td>
+          <td data-zh="年份范围作为 API 参数">Year range as API param</td>
+          <td data-zh="<code>days_back</code> 滚动窗口；遇第一个旧日期停止"><code>days_back</code> rolling window; stops on first old-date hit</td></tr>
+        <tr><td class="dim" data-zh="分页">Pagination</td>
+          <td data-zh="是">Yes</td>
+          <td data-zh="是（最多 2 页 × 100）">Yes (up to 2 pages × 100)</td>
+          <td data-zh="是；各源上限（arXiv 300，S2 200，OA 200×3）">Yes; per-source caps (300/arXiv, 200/S2, 200×3/OA)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="divider-label"><span data-zh="深度分析">Deep Dive</span></div>
+
+  <h3 data-zh="PRS — 带抖动的指数退避">PRS — Exponential Backoff with Jitter</h3>
+  <p data-zh="三者中最复杂的 429 处理。存在时读取 HTTP <code>Retry-After</code> 头，否则回退到带随机乘数（1.0–1.5×）的指数退避以分散重试：">The most sophisticated 429 handling of the three. It reads the HTTP <code>Retry-After</code> header when present, otherwise falls back to exponential backoff with a random multiplier (1.0–1.5×) to spread retries:</p>
+  <pre>wait = min(INITIAL_BACKOFF * (<span class="nu">2</span>**attempt), <span class="nu">60.0</span>)
+wait *= random.uniform(<span class="nu">1.0</span>, <span class="nu">1.5</span>)   <span class="cm"># jitter prevents thundering herd</span></pre>
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="优点">Pros</h5><ul class="items">
+      <li data-zh="遵守服务器声明的重试窗口">Respects the server's stated retry window</li>
+      <li data-zh="抖动防止多个并发进程同时重试">Jitter prevents multiple concurrent processes from all retrying at the same moment</li>
+      <li data-zh="有上限的最大等待（60 秒）避免无限挂起">Bounded max wait (60 s) avoids infinite hangs</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+      <li data-zh="仅为 429 实现；5xx 错误立即抛出">Only implemented for 429; 5xx errors raise immediately</li>
+    </ul></div>
+  </div>
+
+  <h3 data-zh="PF — 异步并发多源抓取">PF — Async Concurrent Multi-Source Fetch</h3>
+  <pre><span class="fn">asyncio.gather</span>(
+    fetch_arxiv(queries, days_back),
+    fetch_semantic_scholar(queries, days_back),
+    fetch_openalex(queries, days_back),
+    return_exceptions=<span class="kw">True</span>
+)</pre>
+  <p>All three sources run in parallel. If one raises, it returns an exception and the others continue — true fail-soft fetch. Total wall-clock time is the max of the three source times, not the sum.</p>
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="优点">Pros</h5><ul class="items">
+      <li data-zh="多源流水线比顺序抓取快 2–3 倍">2–3× faster than sequential fetches for multi-source pipelines</li>
+      <li data-zh="数据源失败被隔离——一个失败不会中止整个运行">Source failures are isolated — one failure does not abort the run</li>
+      <li data-zh="OpenAlex 免费且无需密钥——无需与 S2 共享速率限制配额">OpenAlex is free and keyless — no rate-limit quota to share with S2</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+      <li data-zh="需要整个调用栈都使用 asyncio">Requires asyncio throughout the call stack</li>
+      <li data-zh="跨数据源的请求顺序和速率限制更难推理">Harder to reason about request ordering and rate limits across sources</li>
+      <li data-zh="固定 60 秒重试等待忽略了 Retry-After 头">Fixed 60 s retry wait ignores the Retry-After header</li>
+    </ul></div>
+  </div>
+
+  <h3 data-zh="PF — arXiv 日期感知分页">PF — arXiv Date-Aware Pagination</h3>
+  <p data-zh="PF 一旦遇到早于日期窗口的条目就停止分页——假设结果按日期降序排列。这很高效但也很脆弱：">PF stops paginating a query as soon as it encounters an entry older than the date window — assuming descending date order. This is efficient but brittle:</p>
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="优点">Pros</h5><ul class="items">
+      <li data-zh="从不获取超过时间窗口所需的页数">Never fetches more pages than needed for the time window</li>
+      <li data-zh="自动限制每个查询最多 300 条结果">Automatically caps at 300 results per query</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+      <li data-zh="假设结果严格按日期排序——并非所有查询都能保证">Assumes results are strictly sorted by date — not guaranteed for all queries</li>
+      <li data-zh="单个日期错误的条目可能过早终止分页，遗漏有效的近期论文">A single mis-dated entry can prematurely terminate pagination, missing valid recent papers</li>
+    </ul></div>
+  </div>
+
+  <div class="insight"><strong data-zh="洞察：">Insight:</strong> <span data-zh="Dynamic-LR 具有最健壮的重试逻辑（5xx + TTL 缓存）。PRS 具有最佳退避策略。PF 具有最广的数据源覆盖和唯一的异步实现。终极基线需要在 PF 的异步多源抓取中使用 PRS 的退避策略，并缓存在 Dynamic-LR 的 SQLite <code>api_cache</code> 中。">Dynamic-LR has the most robust retry logic (5xx + TTL cache). PRS has the best backoff strategy. PF has the best source breadth and the only async implementation. The ultimate baseline needs PRS's backoff inside PF's async multi-source fetch, cached in Dynamic-LR's SQLite <code>api_cache</code>.</span></div>
+
+  <div class="rp-box">
+    <strong data-zh="研究原则 — 缓存、重试、恢复：">Research Principle — Cache, retry, resume:</strong> <span data-zh="Agentic AutoSurvey 确立了生产检索流水线必须：以显式 TTL 和请求指纹缓存原始 API 响应；在速率限制时使用带抖动的指数退避；允许安全回退到缓存结果或备用数据源；在每个持久化阶段后设置检查点；区分 <code>partial_success</code>、<code>retryable_failure</code>、<code>permanent_failure</code> 和 <code>skipped_by_policy</code>。每个查询级别的失败都必须可观察——绝不能静默丢弃。">Agentic AutoSurvey establishes that production retrieval pipelines must: cache raw API responses with an explicit TTL and request fingerprint; use exponential backoff with jitter on rate limits; allow safe fallback to cached results or an alternate source; checkpoint after each durable stage; and distinguish <code>partial_success</code>, <code>retryable_failure</code>, <code>permanent_failure</code>, and <code>skipped_by_policy</code>. Every query-level failure must be observable — never silently dropped.</span>
+    <span class="rp-src">— Agentic AutoSurvey §4.3; Dynamic-LR agent context §4.3</span>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     STEP 4 · NORMALIZATION
+═══════════════════════════════════════════════════════════ -->
+<section id="normalize">
+  <h2><span class="step-badge">STEP 4</span> <span data-zh="归一化">Normalization</span></h2>
+  <p class="section-intro" data-zh="归一化将异构的 API 响应转换为共享候选模式。此步骤的质量和完整性决定了去重器和评分器可以使用哪些信息。">Normalization converts heterogeneous API responses into a shared candidate schema. The quality and completeness of this step determines what the deduplicator and scorer can use.</p>
+
+  <div class="card-row cols3">
+    <div class="sys-card dlr">
+      <div class="sys-title">Dynamic-LR — <code>normalizer.py</code></div>
+      <p data-zh="将 S2 API 字典转换为 <code>PaperCandidate</code> 对象（Pydantic/dataclass）。提取 <code>paperId</code>、<code>corpusId</code>、<code>title</code>、<code>abstract</code>、<code>year</code>、<code>publicationDate</code>、<code>authors</code>、<code>venue</code>、<code>citationCount</code>、<code>referenceCount</code>、<code>influentialCitationCount</code>、<code>fieldsOfStudy</code>、<code>publicationTypes</code>、<code>openAccessPdf</code> 以及所有 <code>externalIds</code>（DOI、arXiv、PMID、ACL、MAG）。将丰富的标识符集存储在嵌套的 <code>PaperIdentifiers</code> 子对象中，供身份解析器使用。">Converts S2 API dicts into <code>PaperCandidate</code> objects (Pydantic/dataclass). Extracts <code>paperId</code>, <code>corpusId</code>, <code>title</code>, <code>abstract</code>, <code>year</code>, <code>publicationDate</code>, <code>authors</code>, <code>venue</code>, <code>citationCount</code>, <code>referenceCount</code>, <code>influentialCitationCount</code>, <code>fieldsOfStudy</code>, <code>publicationTypes</code>, <code>openAccessPdf</code>, and all <code>externalIds</code> (DOI, arXiv, PMID, ACL, MAG). Stores the rich identifier set in a nested <code>PaperIdentifiers</code> sub-object for use by the identity resolver.</p>
+    </div>
+    <div class="sys-card prs">
+      <div class="sys-title">PRS — <code>src/normalize.py</code></div>
+      <p data-zh="每个数据源有独立归一化器：<code>normalize_s2</code> 和 <code>normalize_arxiv</code>。两者都返回包含 <code>paper_id</code>、<code>title</code>、<code>authors</code>、<code>year</code>、<code>abstract</code>、<code>doi</code>、<code>arxiv_id</code>、<code>s2_paper_id</code>、<code>pdf_url</code>、<code>venue</code>、<code>citation_count</code>、<code>sources</code> 和 <code>source_queries</code> 的 <code>PaperRecord</code> 数据类。还包括一个 <code>merge_paper_records</code> 函数，在归一化阶段即按 <code>paper_id</code> 去重一批记录。">Separate normalizers for each source: <code>normalize_s2</code> and <code>normalize_arxiv</code>. Both return a <code>PaperRecord</code> dataclass with <code>paper_id</code>, <code>title</code>, <code>authors</code>, <code>year</code>, <code>abstract</code>, <code>doi</code>, <code>arxiv_id</code>, <code>s2_paper_id</code>, <code>pdf_url</code>, <code>venue</code>, <code>citation_count</code>, <code>sources</code>, and <code>source_queries</code>. Also includes a <code>merge_paper_records</code> function that deduplicates a list of records by <code>paper_id</code> during normalization itself.</p>
+    </div>
+    <div class="sys-card pf">
+      <div class="sys-title">PF — <code>app/fetcher.py</code></div>
+      <p data-zh="归一化直接嵌入在 fetcher 模块中，分为 <code>_normalize_arxiv</code>、<code>_normalize_s2</code> 和 <code>_normalize_openalex</code>。每个函数从 <code>_empty_candidate()</code> 填充规范候选字典。值得注意：OpenAlex 以倒排索引形式存储摘要——PF 包含 <code>_reconstruct_abstract</code> 函数，从词位置映射重建文本。以字符串形式存储数据源，并追加到 <code>source_hits</code> 列表用于跨源追踪。">Normalization is embedded directly in the fetcher module as <code>_normalize_arxiv</code>, <code>_normalize_s2</code>, and <code>_normalize_openalex</code>. Each fills a canonical <code>candidate</code> dict from <code>_empty_candidate()</code>. Notable: OpenAlex stores abstracts as an inverted index — PF includes a <code>_reconstruct_abstract</code> function that rebuilds the text from word-position mappings. Stores source as a string and appends to a <code>source_hits</code> list for cross-source tracking.</p>
+    </div>
+  </div>
+
+  <div class="divider-label"><span data-zh="关键差异">Key Differences</span></div>
+
+  <div class="card">
+    <h3 data-zh="OpenAlex 摘要重建（仅 PF）">OpenAlex abstract reconstruction (PF only)</h3>
+    <p data-zh="OpenAlex 不以纯文本返回摘要。它使用倒排索引格式，每个词映射到一个位置列表。PF 从中重建原始文本：">OpenAlex does not return abstracts as plain text. It uses an inverted index format where each word maps to a list of positions. PF reconstructs the original text from this:</p>
+    <pre><span class="kw">def</span> <span class="fn">_reconstruct_abstract</span>(inverted_index: dict) -> str:
+    positions = {}
+    <span class="kw">for</span> word, pos_list <span class="kw">in</span> inverted_index.items():
+        <span class="kw">for</span> pos <span class="kw">in</span> pos_list:
+            positions[pos] = word
+    <span class="kw">return</span> <span class="st">" "</span>.join(positions[i] <span class="kw">for</span> i <span class="kw">in</span> sorted(positions))</pre>
+    <div class="pro-con">
+      <div class="pro-list"><h5 data-zh="优点">Pros</h5><ul class="items">
+        <li data-zh="无需第二次 API 调用即可从 OpenAlex 摘要进行评分">Enables scoring from OpenAlex abstracts without a second API call</li>
+        <li data-zh="处理没有常规摘要字段的论文">Handles papers with no conventional abstract field</li>
+      </ul></div>
+      <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+        <li data-zh="部分 OA 记录没有倒排索引（摘要 = 空字符串）">Some OA records have no inverted index (abstract = empty string)</li>
+        <li data-zh="重建精确但失去了原始空白/标点风格">Reconstruction is exact but loses original whitespace/punctuation style</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 data-zh="归一化时的标识符覆盖">Identifier coverage at normalization</h3>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Identifier</th><th>Dynamic-LR</th><th>PRS</th><th>PF</th></tr></thead>
+      <tbody>
+        <tr><td>DOI</td><td><span class="yes">Yes</span></td><td><span class="yes">Yes</span></td><td><span class="yes">Yes</span></td></tr>
+        <tr><td>arXiv ID</td><td><span class="yes">Yes</span></td><td><span class="yes">Yes</span></td><td><span class="yes">Yes</span></td></tr>
+        <tr><td>S2 paperId</td><td><span class="yes">Yes</span></td><td><span class="yes">Yes</span></td><td><span class="yes">Yes</span></td></tr>
+        <tr><td>S2 corpusId</td><td><span class="yes">Yes</span></td><td><span class="no">No</span></td><td><span class="no">No</span></td></tr>
+        <tr><td>PMID</td><td><span class="yes">Yes</span></td><td><span class="no">No</span></td><td><span class="no">No</span></td></tr>
+        <tr><td>ACL / MAG</td><td><span class="yes">Yes</span></td><td><span class="no">No</span></td><td><span class="no">No</span></td></tr>
+        <tr><td>OpenAlex ID</td><td><span class="no">No</span></td><td><span class="no">No</span></td><td><span class="yes">Yes</span></td></tr>
+      </tbody>
+    </table></div>
+    <p data-zh="Dynamic-LR 捕获 S2 API 返回的每个标识符。更多标识符意味着更少的基于哈希的指纹，以及更可靠的去重。">Dynamic-LR captures every identifier the S2 API returns. More identifiers means fewer hash-based fingerprints and more reliable deduplication.</p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     STEP 5 · IDENTITY RESOLUTION
+═══════════════════════════════════════════════════════════ -->
+<section id="identity">
+  <h2><span class="step-badge">STEP 5</span> <span data-zh="身份解析">Identity Resolution</span></h2>
+  <p class="section-intro" data-zh="稳定的身份是去重的基础。从三个数据源检索到的元数据略有差异的论文必须每次都解析为同一个规范记录。">Stable identity is the foundation of deduplication. A paper retrieved from three sources with slightly different metadata must resolve to the same canonical record every time.</p>
+
+  <div class="card">
+    <h3 data-zh="身份优先级链">Identity Priority Chains</h3>
+    <div class="card-row cols3">
+      <div>
+        <h4>Dynamic-LR</h4>
+        <pre style="font-size:.8rem;">1. DOI (normalized)
+2. arXiv ID (version stripped)
+3. Semantic Scholar paperId
+4. S2 corpusId
+5. PMID / ACL / MAG
+6. SHA-256(title_norm|year|first_author)</pre>
+      </div>
+      <div>
+        <h4>PRS</h4>
+        <pre style="font-size:.8rem;">1. DOI (lowercased)
+2. arXiv ID (version stripped)
+3. Semantic Scholar paperId
+4. SHA-256(title_norm|year)</pre>
+      </div>
+      <div>
+        <h4>PF</h4>
+        <pre style="font-size:.8rem;">1. DOI (URL-prefix stripped)
+2. arXiv ID (URL-prefix stripped)
+3. OpenAlex ID (path segment)
+4. S2 paperId
+5. MD5(title_norm|year|first_author_last)</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider-label"><span data-zh="归一化规则">Normalization Rules</span></div>
+
+  <div class="card-row cols3">
+    <div class="card">
+      <h4 data-zh="DOI 归一化">DOI Normalization</h4>
+      <p data-zh="三者均去除 URL 前缀（<code>https://doi.org/</code>、<code>doi:</code>）并转为小写。Dynamic-LR 还额外去除空白字符。">All three strip URL prefixes (<code>https://doi.org/</code>, <code>doi:</code>) and lowercase. Dynamic-LR additionally strips whitespace.</p>
+      <div class="pro-con" style="grid-template-columns:1fr;">
+        <div class="pro-list"><h5 data-zh="重要原因">Why it matters</h5><ul class="items">
+          <li data-zh="S2 返回 <code>10.1234/abc</code>；arXiv 可能返回 <code>https://doi.org/10.1234/abc</code>">S2 returns <code>10.1234/abc</code>; arXiv may return <code>https://doi.org/10.1234/abc</code></li>
+          <li data-zh="若不归一化，相同论文会得到两个 ID 而永远不会被合并">Without normalization, identical papers get two IDs and are never merged</li>
+        </ul></div>
+      </div>
+    </div>
+    <div class="card">
+      <h4 data-zh="arXiv ID 归一化">arXiv ID Normalization</h4>
+      <p data-zh="三者均去除版本后缀（<code>v1</code>、<code>v2</code> 等）。S2 和 PRS 还去除 <code>arxiv:</code> 前缀。PF 去除完整 URL 前缀。">All three strip the version suffix (<code>v1</code>, <code>v2</code> etc.). S2 and PRS also strip <code>arxiv:</code> prefix. PF strips the full URL prefix.</p>
+      <div class="pro-con" style="grid-template-columns:1fr;">
+        <div class="pro-list"><h5 data-zh="重要原因">Why it matters</h5><ul class="items">
+          <li data-zh="<code>2301.00001v2</code> 和 <code>2301.00001</code> 是同一篇论文"><code>2301.00001v2</code> and <code>2301.00001</code> are the same paper</li>
+          <li data-zh="S2 通常返回 <code>ArXiv</code>（大写 A），而 arXiv API 返回小写">S2 often returns <code>ArXiv</code> (capital A) while arXiv API returns lowercase</li>
+        </ul></div>
+      </div>
+    </div>
+    <div class="card">
+      <h4 data-zh="标题指纹回退">Title Fingerprint Fallback</h4>
+      <p data-zh="仅在没有稳定标识符时使用。Dynamic-LR 和 PRS 使用 SHA-256；PF 使用 MD5。Dynamic-LR 添加第一作者首个词元；PF 添加第一作者姓氏；PRS 仅使用标题+年份。">Used only when no stable identifier is present. Dynamic-LR and PRS use SHA-256; PF uses MD5. Dynamic-LR adds first-author first token; PF adds first-author last name; PRS uses title+year only.</p>
+      <div class="pro-con" style="grid-template-columns:1fr;">
+        <div class="con-list"><h5 data-zh="风险">Risk</h5><ul class="items">
+          <li data-zh="标题在各数据源间有差异（副标题、大小写、标点）">Title varies across sources (subtitle, case, punctuation)</li>
+          <li data-zh="同一篇论文的两条标题略有不同的记录会产生不同的指纹">Two records for the same paper with slightly different titles get different fingerprints</li>
+          <li data-zh="包含作者可降低假阳性，但需要一致的作者格式">Including author reduces false positives but requires consistent author format</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="warn-box"><strong data-zh="警告：">Warning:</strong> <span data-zh="PF 使用 MD5 进行指纹处理。虽然在此规模下 MD5 碰撞概率可以忽略不计，但对新代码来说 SHA-256 是更好的习惯。更重要的是，PF 的指纹<em>不</em>进行 Unicode 归一化——一个数据源中带重音字符的作者名与另一个数据源中的 ASCII 格式，会为同一篇论文产生不同的指纹。">PF uses MD5 for fingerprinting. While MD5 collision probability is negligible at these scales, SHA-256 is a better habit for new code. More importantly, PF's fingerprint does <em>not</em> normalize for Unicode — an author name with an accented character in one source vs. ASCII in another will produce different fingerprints for the same paper.</span></div>
+
+  <div class="rp-box">
+    <strong data-zh="研究原则 — 保守去重：">Research Principle — Conservative deduplication:</strong> <span data-zh="Agentic AutoSurvey 使用 90% 标题相似度作为合并规则。智能体上下文文档明确警告不要这样做：短小的、通用的或几乎相同的标题会将不同论文合并。正确顺序是：先精确标识符，再精确归一化标题 + 强烈的作者/年份一致性，然后将模糊候选标记为 <code>possible_duplicate</code> 供审查，而不是自动合并。<strong>错误合并比保留重复更糟糕</strong>，因为它会静默破坏覆盖率和溯源记录。">Agentic AutoSurvey uses 90% title similarity as a merge rule. The agent context document explicitly warns against this: short, generic, or near-identical titles will collapse distinct papers. The correct order is exact identifiers first, then exact normalized title + strong author/year agreement, then fuzzy candidates labeled <code>possible_duplicate</code> for inspection rather than auto-merged. <strong>A false merge is worse than a retained duplicate</strong> because it silently destroys coverage and provenance.</span>
+    <span class="rp-src">— Dynamic-LR agent context §4.2; Agentic AutoSurvey §3.3</span>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     STEP 6 · DEDUPLICATION
+═══════════════════════════════════════════════════════════ -->
+<section id="dedup">
+  <h2><span class="step-badge">STEP 6</span> <span data-zh="去重与合并">Deduplication &amp; Merge</span></h2>
+  <p class="section-intro" data-zh="去重分两个阶段：在单次运行内折叠重复项（运行内），以及将候选论文与持久化数据库进行匹配（跨会话）。合并策略决定最终记录是最完整的还是仅仅是最先见到的。">Deduplication has two phases: collapsing duplicates within a single run (intra-run), and matching candidates against the persistent database (cross-session). The merge strategy determines whether the final record is the most complete or just the first seen.</p>
+
+  <div class="card-row cols3">
+    <div class="sys-card dlr">
+      <div class="sys-title">Dynamic-LR — <code>deduper.py</code></div>
+      <p><strong data-zh="运行内：">Intra-run:</strong> <span data-zh="<code>dedupe_candidates</code> 按 <code>stable_paper_id</code> 分组候选论文，并通过显式偏好规则合并：保留更长标题、保留更长摘要、填充缺失年份、保留更丰富的作者列表、填充缺失 URL、取引用数的最大值。"><code>dedupe_candidates</code> groups candidates by <code>stable_paper_id</code> and merges them via explicit preference rules: keep longer title, keep longer abstract, fill missing year, keep richer author list, fill missing URLs, take max citation count.</span></p>
+      <p><strong data-zh="跨会话：">Cross-session:</strong> <span data-zh="<code>resolve_against_db</code> 使用 DOI、arXiv、S2 ID 和指纹查询 SQLite 匹配论文。若找到，将候选论文合并到现有记录并记录 <code>MergeEvent</code>。"><code>resolve_against_db</code> queries SQLite for a matching paper using DOI, arXiv, S2 ID, and fingerprint. If found, merges the candidate into the existing record and records a <code>MergeEvent</code>.</span></p>
+    </div>
+    <div class="sys-card prs">
+      <div class="sys-title">PRS — <code>src/store.py</code> + <code>normalize.py</code></div>
+      <p><strong data-zh="运行内：">Intra-run:</strong> <span data-zh="<code>normalize.py</code> 中的 <code>merge_paper_records</code> 在归一化后立即按 <code>paper_id</code> 去重，合并数据源和查询，对内容字段（标题、摘要、年份）保留首次见到的值。"><code>merge_paper_records</code> in <code>normalize.py</code> deduplicates by <code>paper_id</code> immediately after normalization, merging sources and queries, keeping first-seen for content fields (title, abstract, year).</span></p>
+      <p><strong data-zh="跨会话：">Cross-session:</strong> <span data-zh="SQLite 中的 <code>upsert_papers_batch</code> 检查现有论文并调用 <code>_merge_record</code>，同样保留现有内容字段，仅填充缺失内容。以每批 50 条加事务方式批量处理。"><code>upsert_papers_batch</code> in SQLite checks for an existing paper and calls <code>_merge_record</code>, again preserving the existing content fields and only filling what is missing. Batched in chunks of 50 with transactions.</span></p>
+    </div>
+    <div class="sys-card pf">
+      <div class="sys-title">PF — <code>app/deduplicator.py</code></div>
+      <p><strong data-zh="仅运行内：">Intra-run only:</strong> <span data-zh="<code>deduplicate</code> 遍历所有候选论文，按身份键分组，发现碰撞时为两条记录计算 <code>_completeness_score</code>（非空字段数量）。得分较高的记录成为基础；缺失的 ID 从另一条记录填充。"><code>deduplicate</code> iterates all candidates, groups by identity key, and when a collision is found it computes a <code>_completeness_score</code> (count of non-empty fields) for both records. The higher-scoring record becomes the base; missing IDs are filled from the other.</span></p>
+      <p><strong data-zh="无跨会话 SQLite。">No cross-session SQLite.</strong> <span data-zh="跨运行去重依赖于在发布期间将 <code>paper_id</code> 与现有 NDJSON ID 对比检查——每次运行都要全量扫描文件。">Cross-run dedup relies on checking <code>paper_id</code> against existing NDJSON IDs during publishing — a full file scan each run.</span></p>
+    </div>
+  </div>
+
+  <div class="divider-label"><span data-zh="深度分析 — 合并策略">Deep Dive — Merge Strategies</span></div>
+
+  <h3 data-zh="PF 基于完整性的合并基础选择">PF's Completeness-Based Merge Base Selection</h3>
+  <pre><span class="kw">def</span> <span class="fn">_completeness_score</span>(candidate: dict) -> int:
+    fields = [<span class="st">"title"</span>, <span class="st">"abstract"</span>, <span class="st">"authors"</span>, <span class="st">"year"</span>, <span class="st">"url"</span>,
+              <span class="st">"doi"</span>, <span class="st">"arxiv_id"</span>, <span class="st">"openalex_id"</span>, <span class="st">"semantic_scholar_id"</span>, <span class="st">"pdf_url"</span>]
+    <span class="kw">return</span> sum(<span class="nu">1</span> <span class="kw">for</span> f <span class="kw">in</span> fields <span class="kw">if</span> candidate.get(f) <span class="kw">not in</span> (<span class="kw">None</span>, <span class="st">""</span>, []))</pre>
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="优点">Pros</h5><ul class="items">
+      <li data-zh="最大化合并记录中的元数据完整性">Maximizes metadata completeness in the merged record</li>
+      <li data-zh="若 OpenAlex 有摘要而 S2 没有，OA 记录成为基础">If OpenAlex has an abstract but S2 does not, the OA record becomes the base</li>
+      <li data-zh="简单透明——无需逐字段判断">Simple and transparent — no field-by-field judgment calls</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+      <li data-zh="完整性评分对所有字段一视同仁——错误的短标题与有正确标题但无摘要的记录得分相同">Completeness score weights all fields equally — a record with a wrong short title scores the same as one with a correct title and no abstract</li>
+      <li data-zh="可能降低更权威数据源（含 DOI 的 S2）的优先级，而偏向更完整的（含摘要但无 DOI 的 OA）">Can demote a more authoritative source (S2 with DOI) in favor of a more complete one (OA with abstract but no DOI)</li>
+    </ul></div>
+  </div>
+
+  <h3 data-zh="Dynamic-LR 的显式合并规则">Dynamic-LR's Explicit Merge Rules</h3>
+  <pre><span class="cm"># Title: keep longer non-empty</span>
+<span class="kw">if</span> new.title <span class="kw">and</span> len(new.title) > len(primary.title <span class="kw">or</span> <span class="st">""</span>):
+    primary.title = new.title
+<span class="cm"># Abstract: keep longer non-empty</span>
+<span class="kw">if</span> new.abstract <span class="kw">and</span> len(new.abstract) > len(primary.abstract <span class="kw">or</span> <span class="st">""</span>):
+    primary.abstract = new.abstract
+<span class="cm"># Citation count: take max (latest observed)</span>
+setattr(primary, attr, max(cur, new_val))</pre>
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="优点">Pros</h5><ul class="items">
+      <li data-zh="每个字段都有有据可查、有理可循的偏好规则">Each field has a documented, justified preference rule</li>
+      <li data-zh="从不用 null 覆盖好的值">Never overwrites a good value with null</li>
+      <li data-zh="引用数始终是最新观测值（最大值），而非首次见到的值">Citation counts are always the latest observed (max), not the first seen</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+      <li data-zh="更长的标题并不总是更好——错误的长标题会取代正确的短标题">Longer title is not always better — an erroneous long title will displace a correct short one</li>
+      <li data-zh="随着模式演化，规则需要维护">Rules need to be maintained as the schema evolves</li>
+    </ul></div>
+  </div>
+
+  <div class="insight"><strong data-zh="洞察：">Insight:</strong> <span data-zh="理想的合并策略结合了 Dynamic-LR 的显式逐字段规则和 PF 的基于完整性的基础选择：选择更丰富的记录作为起点，然后用显式偏好规则从另一条记录填充各个缺失字段。两个系统目前都没有这样做。">The ideal merge strategy combines Dynamic-LR's explicit per-field rules with PF's completeness-based base selection: pick the richer record as the starting point, then fill individual missing fields from the other using the explicit preference rules. Neither system does this today.</span></div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     STEP 7 · SCORING
+═══════════════════════════════════════════════════════════ -->
+<section id="score">
+  <h2><span class="step-badge">STEP 7</span> <span data-zh="相关性评分">Relevance Scoring</span></h2>
+  <p class="section-intro" data-zh="评分是最直接决定哪些论文被接受的步骤。词法评分与语义评分之间的选择是此流水线中最关键的架构决策。">Scoring is the step that most directly determines which papers are accepted. The choice between lexical and semantic scoring is the most consequential architectural decision in this pipeline.</p>
+
+  <div class="card-row cols3">
+    <div class="sys-card dlr">
+      <div class="sys-title">Dynamic-LR — <code>scorer.py</code></div>
+      <p data-zh="纯词法加权公式。无机器学习依赖。所有组件归一化到 [0,1] 并存储在候选论文上以供审计。">Lexical-only weighted formula. No ML dependencies. All components are normalized to [0,1] and stored on the candidate for auditability.</p>
+    </div>
+    <div class="sys-card prs">
+      <div class="sys-title">PRS — <code>src/rank.py</code></div>
+      <p data-zh="SBERT（<code>all-MiniLM-L6-v2</code>）作为主评分器；TF-IDF 余弦相似度和时间新近性作为辅助。主方法可配置（<code>sbert</code> / <code>tfidf</code> / <code>recency</code>）。使用 Python 对象 <code>id(paper)</code> 作为临时键以避免复制论文。">SBERT (<code>all-MiniLM-L6-v2</code>) as primary scorer; TF-IDF cosine and recency as companions. Primary method is configurable (<code>sbert</code> / <code>tfidf</code> / <code>recency</code>). Uses Python object <code>id(paper)</code> as the temporary key to avoid copying papers.</p>
+    </div>
+    <div class="sys-card pf">
+      <div class="sys-title">PF — <code>app/scorer.py</code> + <code>scorer_sbert.py</code></div>
+      <p data-zh="SBERT + FAISS 作为主评分器；TF-IDF 作为辅助。两种评分都存储在每篇论文上。SBERT 使用持久化嵌入缓存，FAISS <code>IndexFlatIP</code> 使用 L2 归一化向量（通过内积实现余弦相似度）。自动检测 GPU/MPS。">SBERT + FAISS as primary; TF-IDF as companion. Both scores stored on every paper. SBERT uses a persistent embedding cache and FAISS <code>IndexFlatIP</code> with L2-normalized vectors (cosine similarity by inner product). GPU/MPS auto-detected.</p>
+    </div>
+  </div>
+
+  <div class="divider-label"><span data-zh="深度分析 — 评分公式">Deep Dive — Scoring Formulas</span></div>
+
+  <h3 data-zh="Dynamic-LR — 词法加权公式">Dynamic-LR — Lexical Weighted Formula</h3>
+  <div class="formula">
+    score = <span class="w">0.35</span> × <span class="comp">title_keyword_overlap</span><br>
+    <span class="op">     +</span> <span class="w">0.30</span> × <span class="comp">abstract_keyword_overlap</span><br>
+    <span class="op">     +</span> <span class="w">0.15</span> × <span class="comp">query_phrase_match</span><br>
+    <span class="op">     +</span> <span class="w">0.10</span> × <span class="comp">recency_score</span><br>
+    <span class="op">     +</span> <span class="w">0.05</span> × <span class="comp">identifier_score</span><br>
+    <span class="op">     +</span> <span class="w">0.05</span> × <span class="comp">citation_score</span>
+  </div>
+
+  <p data-zh="每个组件是一个限定在 [0,1] 范围内的比率：">Each component is a ratio bounded to [0,1]:</p>
+  <div class="card-row cols3">
+    <div class="card">
+      <h4 data-zh="关键词重叠">Keyword overlap</h4>
+      <p data-zh="Jaccard 式交集：<code>|config_terms ∩ paper_tokens| / |config_terms|</code>。两个集合都移除停用词。配置词项是来自 <code>topic</code>、<code>questions</code> 和 <code>hints</code> 的所有非停用词词元的并集。">Jaccard-style intersection: <code>|config_terms ∩ paper_tokens| / |config_terms|</code>. Stopwords are removed from both sets. Config terms are the union of all non-stop tokens from <code>topic</code>, <code>questions</code>, and <code>hints</code>.</p>
+    </div>
+    <div class="card">
+      <h4 data-zh="短语匹配">Phrase match</h4>
+      <p data-zh="若任意生成的查询（转小写）在标题+摘要中逐字出现，返回 1.0；若至少 50% 的短语词元出现，返回 0.5；否则 0.0。">Returns 1.0 if any generated query appears verbatim (lowercased) in the title+abstract; 0.5 if at least 50% of the phrase tokens appear; 0.0 otherwise.</p>
+    </div>
+    <div class="card">
+      <h4 data-zh="时间新近性评分">Recency score</h4>
+      <p data-zh="配置的年份窗口内为 1.0；窗口外每年线性衰减 0.1；年份缺失时为 0.5（部分得分）。">1.0 inside the configured year window; linear decay at 0.1/year outside; 0.5 if year is missing (partial credit).</p>
+    </div>
+  </div>
+
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="优点 — 词法评分">Pros — Lexical</h5><ul class="items">
+      <li data-zh="完全确定性——无需模型、GPU 或网络">Fully deterministic — no model, no GPU, no internet</li>
+      <li data-zh="每个评分组件都有人类可读的解释">Every score component has a human-readable explanation</li>
+      <li data-zh="标识符和引用组件奖励元数据质量">Identifier and citation components reward metadata quality</li>
+      <li data-zh="若词元重叠率高，评分跨语言一致">Score is consistent across languages if token overlap is high</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="缺点 — 词法评分">Cons — Lexical</h5><ul class="items">
+      <li data-zh="遗漏不共享表面词元的语义相关论文（如"neural network"与"deep learning"）">Misses semantically related papers that don't share surface tokens (e.g. "neural network" vs "deep learning")</li>
+      <li data-zh="短语匹配奖励恰好引用了查询词的论文，而非真正理解它的论文">Query-phrase match rewards papers that happen to quote the query rather than understand it</li>
+      <li data-zh="权重是手工调整的——无实证校准">Weights are hand-tuned — no empirical calibration</li>
+    </ul></div>
+  </div>
+
+  <h3 data-zh="PRS / PF — SBERT 语义评分">PRS / PF — SBERT Semantic Scoring</h3>
+  <pre><span class="cm"># PRS: rank_sbert</span>
+query_embedding = model.encode(query, convert_to_tensor=<span class="kw">True</span>)
+paper_embeddings = model.encode([_paper_text(p) <span class="kw">for</span> p <span class="kw">in</span> papers])
+scores = cos_sim(query_embedding, paper_embeddings)[<span class="nu">0</span>].tolist()
+
+<span class="cm"># PF: FAISS IndexFlatIP (equivalent but faster)</span>
+faiss.normalize_L2(normalized)          <span class="cm"># unit vectors</span>
+index.add(normalized)                   <span class="cm"># add paper vectors</span>
+faiss.normalize_L2(query_emb)
+scores, indices = index.search(query_emb, k=len(papers))</pre>
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="优点 — SBERT">Pros — SBERT</h5><ul class="items">
+      <li data-zh="捕获语义关系：同义词、改写、相关方法">Captures semantic relationships: synonyms, paraphrases, related methods</li>
+      <li data-zh="无需手工调整权重的单一评分">Single score without hand-tuned weights</li>
+      <li data-zh="在广泛研究主题上具有最先进的召回率">State-of-the-art recall on broad research topics</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="缺点 — SBERT">Cons — SBERT</h5><ul class="items">
+      <li data-zh="首次运行需下载约 80 MB 模型；在无 GPU 的 CPU 上速度慢">~80 MB model download on first run; slow on CPU without GPU</li>
+      <li data-zh="评分不直接可解释——无组件分解">Score is not directly interpretable — no component breakdown</li>
+      <li data-zh="评分范围因查询而异——阈值 0.3 对不同主题含义不同">Score range varies by query — a threshold of 0.3 means different things for different topics</li>
+      <li data-zh="对传递给编码器的查询文本质量敏感">Sensitive to the quality of the query text passed to the encoder</li>
+    </ul></div>
+  </div>
+
+  <h3 data-zh="PF — FAISS 与 PRS — cos_sim 对比">PF — FAISS vs. PRS — cos_sim</h3>
+  <p data-zh="<span class='tag-prs'>PRS</span> 使用 <code>sentence_transformers.util.cos_sim</code>（PyTorch 张量）。<span class='tag-pf'>PF</span> 使用带 L2 归一化向量的 FAISS <code>IndexFlatIP</code>——单位向量的内积等于余弦相似度，但 FAISS 在大型候选集上快 10–100 倍。"><span class="tag-prs">PRS</span> uses <code>sentence_transformers.util.cos_sim</code> (PyTorch tensors). <span class="tag-pf">PF</span> uses FAISS <code>IndexFlatIP</code> with L2-normalized vectors — inner product of unit vectors equals cosine similarity but FAISS is 10–100× faster on large candidate sets.</p>
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="PF FAISS 优势">PF FAISS advantage</h5><ul class="items">
+      <li data-zh="扩展到数千个候选论文而不会产生逐次调用的性能下降">Scales to thousands of candidates without per-call slowdown</li>
+      <li data-zh="L2 归一化步骤明确且可读">L2 normalization step is explicit and readable</li>
+      <li data-zh="嵌入缓存意味着重复运行时只需对新论文编码">Embedding cache means only new papers are encoded on repeat runs</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="FAISS 权衡">FAISS trade-offs</h5><ul class="items">
+      <li data-zh="增加了原生二进制依赖；在受限环境中难以安装">Adds a native binary dependency; harder to install in restricted environments</li>
+      <li data-zh="IndexFlatIP 是精确的（100% 召回率）但暴力搜索——不是 ANN 索引">IndexFlatIP is exact (100% recall) but brute-force — not an ANN index</li>
+    </ul></div>
+  </div>
+
+  <h3 data-zh="PF — 双评分存储">PF — Dual-Score Storage</h3>
+  <p data-zh="PF 对每篇论文同时运行 TF-IDF 和 SBERT 并两者都存储。主过滤器使用 <code>sbert_score</code>，但 <code>tfidf_score</code> 持久化供后续检查。发布器还可以对添加双评分之前保存的历史论文进行回溯评分。">PF runs both TF-IDF and SBERT on every paper and stores both. The primary filter uses <code>sbert_score</code>, but <code>tfidf_score</code> is persisted for later inspection. The publisher can also retro-score existing papers that were saved before dual scoring was added.</p>
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="优点">Pros</h5><ul class="items">
+      <li data-zh="支持事后分析：哪些论文词法评分高但语义评分低（或反之）？">Enables post-hoc analysis: which papers score high on lexical but low on semantic (or vice versa)?</li>
+      <li data-zh="向后兼容——旧记录可就地升级">Backward compatible — old records can be upgraded in-place</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+      <li data-zh="运行两个评分器使计算时间翻倍">Running both scorers doubles compute time</li>
+      <li data-zh="只有一个用于接受/拒绝决策——另一个是装饰性的，除非下游消费">Only one is used for the accept/reject decision — the other is decorative unless consumed downstream</li>
+    </ul></div>
+  </div>
+
+  <div class="insight"><strong data-zh="洞察：">Insight:</strong> <span data-zh="终极基线应使用 SBERT 作为主信号，词法评分作为可解释性层。在 SBERT 上评分高但关键词重叠低的论文值得调查；两者都低的论文可以确信地拒绝。PF 的双输出模式是正确的设计——采用它，但使用 Dynamic-LR 的词法公式（而非仅 TF-IDF）作为辅助，因为它包含了纯 TF-IDF 遗漏的时间新近性、引用和标识符信号。">The ultimate baseline should use SBERT as the primary signal and lexical scores as the explainability layer. A paper that scores high on SBERT but low on keyword overlap is worth investigating; a paper that scores low on both is a confident reject. PF's dual-output pattern is the right design — adopt it, but use Dynamic-LR's lexical formula (not just TF-IDF) as the companion because it includes recency, citation, and identifier signals that pure TF-IDF misses.</span></div>
+
+  <div class="rp-box">
+    <strong data-zh="研究原则 — ScreeningDecision 记录：">Research Principle — ScreeningDecision record:</strong> <span data-zh="LatteReview 的轮次模式直接对应于评分结果的持久化方式。每个接受/拒绝决策都应存储为 <code>ScreeningDecision</code>，包含：流水线阶段（<code>metadata_filter</code> / <code>baseline_score</code> / <code>agent_review</code> / <code>human_override</code>）、决策本身、评分、标准版本字符串、简明原理说明（非隐藏思维链），以及驱动决策的支撑字段。这使得基线和智能体结果在<strong>结构上可比较</strong>——而不仅仅是数值上可比较。">LatteReview's round-based schema maps directly to how scoring results should be persisted. Every accept/reject decision should be stored as a <code>ScreeningDecision</code> with: the pipeline stage (<code>metadata_filter</code> / <code>baseline_score</code> / <code>agent_review</code> / <code>human_override</code>), the decision itself, the score, a criteria version string, a concise rationale (not hidden chain-of-thought), and the supporting fields that drove the decision. This makes the baseline and agent outcomes <strong>structurally comparable</strong> — not just numerically comparable.</span>
+    <span class="rp-src">— LatteReview §3.2; Dynamic-LR agent context §3.3</span>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     STEP 8 · FILTERING
+═══════════════════════════════════════════════════════════ -->
+<section id="filter">
+  <h2><span class="step-badge">STEP 8</span> <span data-zh="过滤与接受/拒绝">Filtering &amp; Accept / Reject</span></h2>
+  <p class="section-intro" data-zh="过滤是候选池与已接受数据库之间的关卡。拒绝记录的质量决定了系统长期可调整和可审计的能力。">Filtering is the gate between candidate pool and accepted database. The quality of reject records determines how well the system can be tuned and audited over time.</p>
+
+  <div class="card-row cols3">
+    <div class="sys-card dlr">
+      <div class="sys-title">Dynamic-LR — <code>filters.py</code></div>
+      <p data-zh="应用一系列确定性过滤检查。每个被拒绝的候选论文都会收到一个类型化原因代码（<code>missing_title</code>、<code>below_relevance_threshold</code>、<code>outside_timeline</code>、<code>duplicate_merged</code>、<code>malformed_metadata</code>、<code>api_error</code>、<code>target_not_found</code>、<code>other</code>）以及包含阈值、匹配词项和缺失词项的结构化 <code>evidence</code> 字典。">Applies a sequence of deterministic filter checks. Every rejected candidate receives a typed reason code (<code>missing_title</code>, <code>below_relevance_threshold</code>, <code>outside_timeline</code>, <code>duplicate_merged</code>, <code>malformed_metadata</code>, <code>api_error</code>, <code>target_not_found</code>, <code>other</code>) and a structured <code>evidence</code> dict containing the threshold, matched terms, and missing terms.</p>
+    </div>
+    <div class="sys-card prs">
+      <div class="sys-title">PRS — <code>src/agent.py</code></div>
+      <p data-zh="过滤通过 <code>results_acceptable</code> 嵌入在智能体循环中。同时检查三个条件：<code>top_score >= SCORE_TOP_MIN</code>、<code>good_count >= MIN_GOOD_PAPERS</code>，以及 <code>top - median_top5 >= MIN_SCORE_GAP</code>。若批次失败，则触发新查询而非保存拒绝记录。单篇论文拒绝记录被写入 SQLite 并附有原因字符串。">Filtering is embedded in the agent loop via <code>results_acceptable</code>. Checks three conditions simultaneously: <code>top_score >= SCORE_TOP_MIN</code>, <code>good_count >= MIN_GOOD_PAPERS</code>, and <code>top - median_top5 >= MIN_SCORE_GAP</code>. If the batch fails, it triggers a new query rather than saving rejects. Individual paper rejects are written to SQLite with a reason string.</p>
+    </div>
+    <div class="sys-card pf">
+      <div class="sys-title">PF — <code>app/run.py</code></div>
+      <p data-zh="主流水线循环中的内联过滤器。三个条件：<code>not title</code>、<code>not url</code>（元数据缺失）、<code>score &lt; min_relevance_score</code>，以及年份超出时间窗口。被拒绝论文获得一个 <code>reject_reason</code> 字符串字段。无单独过滤模块——所有逻辑均在 <code>run.py</code> 中。">Inline filter in the main pipeline loop. Three conditions: <code>not title</code>, <code>not url</code> (missing metadata), <code>score &lt; min_relevance_score</code>, and <code>year outside timeline</code>. Rejected papers get a <code>reject_reason</code> string field. No separate filter module — all logic lives in <code>run.py</code>.</p>
+    </div>
+  </div>
+
+  <div class="divider-label"><span data-zh="深度分析">Deep Dive</span></div>
+
+  <h3 data-zh="PRS — 批次接受关卡">PRS — Batch Acceptance Gate</h3>
+  <pre><span class="kw">def</span> <span class="fn">results_acceptable</span>(ranked):
+    scores = [p[<span class="st">"relevance_score"</span>] <span class="kw">for</span> p <span class="kw">in</span> ranked]
+    top = scores[<span class="nu">0</span>]
+    good_count = sum(<span class="nu">1</span> <span class="kw">for</span> s <span class="kw">in</span> scores <span class="kw">if</span> s >= SCORE_GOOD)     <span class="cm"># 0.40</span>
+    median_top5 = sorted(scores[:<span class="nu">5</span>])[len(scores[:<span class="nu">5</span>])//<span class="nu">2</span>]
+    <span class="kw">if</span> top < SCORE_TOP_MIN:  <span class="kw">return</span> <span class="kw">False</span>, <span class="st">"top_score_low"</span>
+    <span class="kw">if</span> good_count < MIN_GOOD_PAPERS:  <span class="kw">return</span> <span class="kw">False</span>, <span class="st">"too_few_good_papers"</span>
+    <span class="kw">if</span> top - median_top5 < MIN_SCORE_GAP:  <span class="kw">return</span> <span class="kw">False</span>, <span class="st">"flat_scores"</span>
+    <span class="kw">return</span> <span class="kw">True</span>, <span class="st">"ok"</span></pre>
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="优点">Pros</h5><ul class="items">
+      <li data-zh="捕获每篇论文都通过阈值但整个批次质量平庸的情形">Catches cases where every paper passes a threshold but the whole batch is mediocre</li>
+      <li data-zh=""平分"检查可发现所有论文评分相近的歧义查询">"Flat scores" check detects ambiguous queries where all papers score similarly</li>
+      <li data-zh="提供具名的失败原因，可反馈给查询优化流程">Provides a named failure reason that feeds back into query refinement</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+      <li data-zh="硬编码阈值（<code>SCORE_GOOD=0.40</code>、<code>MIN_GOOD_PAPERS=3</code>、<code>MIN_SCORE_GAP=0.08</code>）无法从调查配置中配置">Hardcoded thresholds (<code>SCORE_GOOD=0.40</code>, <code>MIN_GOOD_PAPERS=3</code>, <code>MIN_SCORE_GAP=0.08</code>) are not configurable from the survey config</li>
+      <li data-zh="设计用于触发 LLM 重新查询；在确定性流水线中它变成了指标而非动作">Designed to trigger LLM re-query; in a deterministic pipeline it becomes a metric rather than an action</li>
+    </ul></div>
+  </div>
+
+  <h3 data-zh="Dynamic-LR — 类型化拒绝证据">Dynamic-LR — Typed Reject Evidence</h3>
+  <pre>{
+  <span class="st">"reason"</span>: <span class="st">"below_relevance_threshold"</span>,
+  <span class="st">"score"</span>: <span class="nu">0.18</span>,
+  <span class="st">"evidence"</span>: {
+    <span class="st">"threshold"</span>: <span class="nu">0.30</span>,
+    <span class="st">"matched_terms"</span>: [<span class="st">"explainability"</span>, <span class="st">"neural"</span>],
+    <span class="st">"missing_terms"</span>: [<span class="st">"uncertainty"</span>, <span class="st">"calibration"</span>, <span class="st">"interpretable"</span>]
+  }
+}</pre>
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="优点">Pros</h5><ul class="items">
+      <li data-zh="审阅者可以查看任意被拒绝的论文并准确理解原因">A reviewer can look at any rejected paper and understand exactly why</li>
+      <li data-zh="缺失词项揭示配置词汇中哪些未被匹配——对调整查询提示非常有用">Missing terms reveal which config vocabulary is not being matched — useful for tuning query hints</li>
+      <li data-zh="支持聚合分析：哪些词项最频繁地缺失？">Enables aggregate analysis: which terms are most frequently missing?</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+      <li data-zh="为每篇被拒绝论文增加存储开销">Adds storage overhead for every rejected paper</li>
+      <li data-zh="证据仅对词法评分有意义；SBERT 拒绝没有类似的解释">Evidence is only meaningful for lexical scoring; SBERT rejects have no analogous explanation</li>
+    </ul></div>
+  </div>
+
+  <div class="warn-box"><strong data-zh="关于 PF URL 要求的说明：">Note on PF's URL requirement:</strong> <span data-zh="PF 无论评分如何都会拒绝没有 URL 的论文。OpenAlex 记录有时缺少 <code>primary_location.landing_page_url</code>（例如没有期刊页面的预印本）。此过滤器可能会静默丢弃有 DOI 但无网页的有效论文——值得放宽为：要求 URL <em>或</em> DOI。">PF rejects papers with no URL regardless of score. OpenAlex records sometimes lack a <code>primary_location.landing_page_url</code> (e.g. preprints without a journal page). This filter may silently drop valid papers that have DOIs but no webpage — worth relaxing to: require URL <em>or</em> DOI.</span></div>
+
+  <div class="rp-box">
+    <strong data-zh="研究原则 — 先用廉价的数据源原生过滤器：">Research Principle — Cheap source-native filters first:</strong> <span data-zh="LatteReview 的模型非常适合这一步骤：在任何评分之前的第 0 轮中应用廉价的基于规则的元数据过滤器。年份范围、语言、文档类型、开放获取标志和缺少标题的规则都应是单独的命名过滤条件，每个条件都产生一个类型化的拒绝原因。这是 <code>ScreeningDecision</code> 合约的"元数据过滤"阶段——在审计日志中它必须与"baseline_score"阶段可区分。">LatteReview's model maps well to this step: apply cheap, rule-based metadata filters in Round 0 before any scoring. Year range, language, document type, open-access flag, and missing-title rules should all be separate named filter conditions, each producing a typed reject reason. This is the "metadata filter" stage of the <code>ScreeningDecision</code> contract — it must be distinguishable from the "baseline_score" stage in audit logs.</span>
+    <span class="rp-src">— LatteReview §3.1; Dynamic-LR agent context §5.1</span>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     STEP 9 · PERSISTENCE
+═══════════════════════════════════════════════════════════ -->
+<section id="persist">
+  <h2><span class="step-badge">STEP 9</span> <span data-zh="持久化与存储">Persistence &amp; Storage</span></h2>
+  <p class="section-intro" data-zh="持久化决定了流水线跨运行维护状态的能力。没有跨会话状态的系统无法检测先前运行引入的重复项，无法追踪查询性能，也无法支持目标论文检测。">Persistence determines how well the pipeline maintains state across runs. A system without cross-session state cannot detect duplicates introduced by previous runs, cannot track query performance, and cannot support target-paper detection.</p>
+
+  <div class="card-row cols3">
+    <div class="sys-card dlr">
+      <div class="sys-title">Dynamic-LR — <code>db.py</code></div>
+      <p data-zh="SQLite 作为主要的真实来源。架构有 7 张表：<code>papers</code>、<code>source_hits</code>、<code>rejects</code>、<code>merge_events</code>、<code>runs</code>、<code>api_cache</code>、<code>query_state</code>。所有写入使用事务。导出文件以原子方式写入（tmp + rename）。<code>api_cache</code> 存储带 TTL 的原始 API 响应，使流水线可在重复运行时跳过冗余调用。">SQLite as the primary source of truth. Schema has 7 tables: <code>papers</code>, <code>source_hits</code>, <code>rejects</code>, <code>merge_events</code>, <code>runs</code>, <code>api_cache</code>, <code>query_state</code>. All writes use transactions. Export files are written atomically (tmp + rename). <code>api_cache</code> stores raw API responses with a TTL, enabling the pipeline to skip redundant calls on repeat runs.</p>
+    </div>
+    <div class="sys-card prs">
+      <div class="sys-title">PRS — <code>src/store.py</code></div>
+      <p data-zh="SQLite 有 4 张表：<code>papers</code>、<code>source_hits</code>、<code>merge_events</code>、<code>rejects</code>。以 50 条为一批进行批量更新插入，错误时回滚。API 响应的文件缓存（每个请求哈希一个 JSON 文件）。导出时无原子写入。无运行历史或查询状态表。">SQLite with 4 tables: <code>papers</code>, <code>source_hits</code>, <code>merge_events</code>, <code>rejects</code>. Batched upsert in chunks of 50 with rollback on error. File cache for API responses (one JSON file per request hash). No atomic writes on export. No run history or query state tables.</p>
+    </div>
+    <div class="sys-card pf">
+      <div class="sys-title">PF — <code>app/store.py</code></div>
+      <p data-zh="NDJSON 作为主要存储。无 SQLite。跨运行重复检测在每次发布调用时读取 <code>papers.ndjson</code> 中所有现有的论文 ID。嵌入缓存存储为 <code>data/embeddings_cache.npy</code>（numpy）——这是跨运行状态的唯一形式。无运行制品、无 API 响应缓存、无查询状态。">NDJSON as primary storage. No SQLite. Cross-run duplicate detection reads all existing paper IDs from <code>papers.ndjson</code> on every publish call. Embedding cache stored as <code>data/embeddings_cache.npy</code> (numpy) — the only form of cross-run state. No run artifacts, no API response cache, no query state.</p>
+    </div>
+  </div>
+
+  <div class="divider-label"><span data-zh="深度分析">Deep Dive</span></div>
+
+  <h3 data-zh="SQLite 与 NDJSON 作为主存储的对比">SQLite vs. NDJSON as Primary Store</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th data-zh="能力">Capability</th><th data-zh="SQLite（Dynamic-LR / PRS）">SQLite (Dynamic-LR / PRS)</th><th>NDJSON (PF)</th></tr></thead>
+    <tbody>
+      <tr><td data-zh="跨运行去重">Cross-run dedup</td><td><span class="yes" data-zh="O(log n) 索引查找">O(log n) index lookup</span></td><td><span class="partial" data-zh="O(n) 全文件扫描">O(n) full file scan</span></td></tr>
+      <tr><td data-zh="合并事件日志">Merge event logging</td><td><span class="yes" data-zh="是（表）">Yes (table)</span></td><td><span class="no" data-zh="否">No</span></td></tr>
+      <tr><td data-zh="查询性能追踪">Query performance tracking</td><td><span class="yes" data-zh="是（仅 Dynamic-LR）">Yes (Dynamic-LR only)</span></td><td><span class="no" data-zh="否">No</span></td></tr>
+      <tr><td data-zh="架构迁移">Schema migrations</td><td data-zh="手动 <code>ALTER TABLE</code>">Manual <code>ALTER TABLE</code></td><td data-zh="不需要——无架构">Not needed — no schema</td></tr>
+      <tr><td data-zh="并发读访问">Concurrent read access</td><td data-zh="WAL 模式">WAL mode</td><td data-zh="任意读取者">Any reader</td></tr>
+      <tr><td data-zh="人类可读性">Human readability</td><td data-zh="需要 SQL 客户端">Needs a SQL client</td><td><span class="yes" data-zh="纯文本，可 grep">Plain text, grepable</span></td></tr>
+      <tr><td data-zh="仅追加写入">Append-only writes</td><td data-zh="否（更新插入）">No (upsert)</td><td><span class="yes" data-zh="是（追加 NDJSON）">Yes (append NDJSON)</span></td></tr>
+      <tr><td data-zh="Git 可追踪">Git-trackable</td><td data-zh="否（二进制）">No (binary)</td><td><span class="yes" data-zh="是（行差异）">Yes (line diffs)</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="insight"><strong data-zh="洞察：">Insight:</strong> <span data-zh="Dynamic-LR 的混合方法（SQLite 主存储 + NDJSON 导出）是此用例的正确模式。SQLite 提供快速的身份解析和结构化查询。NDJSON 提供人类可读的输出、git 可追踪的历史记录和站点发布。在流水线规模下，单独任何一种都不够。">Dynamic-LR's hybrid approach (SQLite primary + NDJSON export) is the correct pattern for this use case. SQLite provides fast identity resolution and structured queries. NDJSON provides human-readable output, git-trackable history, and site publishing. Neither alone is sufficient at pipeline scale.</span></div>
+
+  <div class="rp-box">
+    <strong data-zh="研究原则 — 原始来源不可妥协：">Research Principle — Raw provenance is non-negotiable:</strong> <span data-zh="三篇论文都汇聚于同一原则：规范化字段绝不能覆盖原始来源。将原始数据源负载单独保存，以数据源、请求指纹和响应哈希为键。数据库加上不可变的运行制品是权威的——<em>任何展示制品都不得成为唯一真实来源。</em>PF 通过将 NDJSON 同时用作主存储和导出格式违反了这一原则。">All three papers converge on a single principle: normalized fields must never overwrite raw provenance. Keep raw source payloads separately, keyed by source, request fingerprint, and response hash. The database plus immutable run artifacts are authoritative — <em>no presentation artifact may become the only source of truth.</em> PF violates this by using NDJSON as both primary store and export format.</span>
+    <span class="rp-src">— Dynamic-LR agent context §3.1, §2.2; InsightAgent §4.2</span>
+  </div>
+
+  <h3>Dynamic-LR — <code>query_state</code> <span data-zh="表">Table</span></h3>
+  <p data-zh="Dynamic-LR 持久化设计中最独特的元素。它跨所有运行追踪每个查询的统计信息：">The most unique element of Dynamic-LR's persistence design. It tracks per-query statistics across all runs:</p>
+  <pre><span class="kw">CREATE TABLE</span> query_state (
+  query_norm       TEXT <span class="kw">PRIMARY KEY</span>,
+  query_original   TEXT <span class="kw">NOT NULL</span>,
+  total_runs       INTEGER <span class="kw">DEFAULT</span> <span class="nu">0</span>,
+  total_candidates INTEGER <span class="kw">DEFAULT</span> <span class="nu">0</span>,
+  total_accepted   INTEGER <span class="kw">DEFAULT</span> <span class="nu">0</span>,
+  total_duplicates INTEGER <span class="kw">DEFAULT</span> <span class="nu">0</span>,
+  total_errors     INTEGER <span class="kw">DEFAULT</span> <span class="nu">0</span>,
+  last_run_at      TEXT
+);</pre>
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="优点">Pros</h5><ul class="items">
+      <li data-zh="循环控制可降级持续产生零接受论文的查询优先级">Loop control can demote queries that consistently produce zero accepted papers</li>
+      <li data-zh="揭示哪些查询类型随时间产生最高重复率">Reveals which query types produce the highest duplicate rate over time</li>
+      <li data-zh="为从配置中添加或删除查询提示提供依据">Provides evidence for adding or removing query hints from the config</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+      <li data-zh="每次查询完成都增加一次写操作——轻微的额外开销">Adds a write on every query completion — minor overhead</li>
+      <li data-zh="查询字符串的规范化必须跨运行保持一致才能正确匹配">Normalization of query strings must be consistent across runs to match correctly</li>
+    </ul></div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     STEP 10 · PUBLISHING
+═══════════════════════════════════════════════════════════ -->
+<section id="publish">
+  <h2><span class="step-badge">STEP 10</span> <span data-zh="发布与站点导出">Publishing &amp; Site Export</span></h2>
+  <p class="section-intro" data-zh="发布将流水线内部状态转换为静态站点和其他架构使用的共享输出文件。">Publishing converts internal pipeline state into the shared output files consumed by the static site and other architectures.</p>
+
+  <div class="card-row cols3">
+    <div class="sys-card dlr">
+      <div class="sys-title">Dynamic-LR — <code>publisher.py</code></div>
+      <p data-zh="从 SQLite 导出到：<code>data/papers.ndjson</code>、<code>data/rejects.ndjson</code>、<code>data/run_history.ndjson</code>、<code>data/changelog.md</code>、<code>data/system_status.json</code>。镜像到 <code>site/data/*.json</code>。使用原子写入（写入 <code>.tmp</code>，然后重命名）以防止部分读取。导出前对数据进行确定性排序。">Exports from SQLite to: <code>data/papers.ndjson</code>, <code>data/rejects.ndjson</code>, <code>data/run_history.ndjson</code>, <code>data/changelog.md</code>, <code>data/system_status.json</code>. Mirrors to <code>site/data/*.json</code>. Uses atomic writes (write to <code>.tmp</code>, rename) to prevent partial reads. Exports are sorted deterministically before writing.</p>
+    </div>
+    <div class="sys-card prs">
+      <div class="sys-title" data-zh="PRS — 无发布器">PRS — No publisher</div>
+      <p data-zh="PRS 没有静态发布流水线。SQLite 数据库由 Flask 应用程序（<code>src/app.py</code>）直接提供服务。这意味着与共享项目文件没有 NDJSON 兼容性。运行制品以 JSON 文件形式保存在 <code>outputs/runs/{run_id}/</code> 下。">PRS has no static publishing pipeline. The SQLite database is served directly by a Flask application (<code>src/app.py</code>). This means there is no NDJSON compatibility with the shared project files. Run artifacts are saved under <code>outputs/runs/{run_id}/</code> as JSON files.</p>
+    </div>
+    <div class="sys-card pf">
+      <div class="sys-title">PF — <code>app/publisher.py</code></div>
+      <p data-zh="每次发布时读取所有现有 NDJSON，通过 <code>paper_id</code> 检查新论文，追加新论文，并将完整集合写入 <code>site/data/papers.json</code>。还对缺少 <code>tfidf_score</code> 或 <code>sbert_score</code> 的现有论文进行回溯评分。将配置和变更日志复制到 <code>site/data/</code>。对没有这些字段的历史论文写入 <code>null</code> 评分字段。">Reads all existing NDJSON on every publish, checks for new papers by <code>paper_id</code>, appends new ones, and writes the full collection to <code>site/data/papers.json</code>. Also retro-scores existing papers missing <code>tfidf_score</code> or <code>sbert_score</code>. Copies config and changelog to <code>site/data/</code>. Writes score fields as <code>null</code> for legacy papers without those fields.</p>
+    </div>
+  </div>
+
+  <div class="divider-label"><span data-zh="关键差异">Key Differences</span></div>
+
+  <div class="card">
+    <h3 data-zh="原子写入（仅 Dynamic-LR）">Atomic writes (Dynamic-LR only)</h3>
+    <pre>write_data  -> papers.ndjson.tmp
+os.rename("papers.ndjson.tmp", "papers.ndjson")</pre>
+    <div class="pro-con">
+      <div class="pro-list"><h5 data-zh="重要性">Why it matters</h5><ul class="items">
+        <li data-zh="如果流水线在写入过程中崩溃，已发布的文件不会处于部分状态">If the pipeline crashes mid-write, the published file is not left in a partial state</li>
+        <li data-zh="写入进行中打开文件的读取者看到的是旧的完整文件，而非乱码">A reader that opens the file while a write is in progress sees the old complete file, not garbage</li>
+      </ul></div>
+      <div class="con-list"><h5 data-zh="成本">Cost</h5><ul class="items">
+        <li data-zh="要求临时文件和最终文件在同一文件系统（同一分区）">Requires the tmp file and final file to be on the same filesystem (same partition)</li>
+        <li data-zh="每个导出文件增加一次 stat + rename 系统调用">Adds a stat + rename syscall per export file</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 data-zh="PF — 发布时回溯评分">PF — Retro-scoring on publish</h3>
+    <p data-zh="当 PF 的发布器检测到 <code>papers.ndjson</code> 中缺少 <code>tfidf_score</code> 或 <code>sbert_score</code> 的现有论文时，它会在写入站点数据之前对这些论文重新运行评分器。这意味着向 PF 添加新评分器会在下一次运行时自动回填整个历史数据库。">When PF's publisher detects existing papers in <code>papers.ndjson</code> that are missing <code>tfidf_score</code> or <code>sbert_score</code>, it re-runs the scorer on those papers before writing the site data. This means adding a new scorer to PF automatically backfills the entire historical database on the next run.</p>
+    <div class="pro-con">
+      <div class="pro-list"><h5 data-zh="优点">Pros</h5><ul class="items">
+        <li data-zh="站点始终在所有论文上显示完整、一致的评分字段">The site always shows complete, consistent score fields across all papers</li>
+        <li data-zh="升级评分方法不需要单独的迁移脚本">Upgrading the scoring method does not require a separate migration script</li>
+      </ul></div>
+      <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+        <li data-zh="如果积压大，回溯评分可能很昂贵（通过 SBERT 重新编码所有缺失论文）">Retro-scoring can be expensive if the backlog is large (re-encodes all missing papers through SBERT)</li>
+        <li data-zh="使发布时间不可预测——评分器升级后首次运行要慢得多">Makes publish time unpredictable — first run after a scorer upgrade is much slower</li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     STEP 11 · LOOP CONTROL
+═══════════════════════════════════════════════════════════ -->
+<section id="loop">
+  <h2><span class="step-badge">STEP 11</span> <span data-zh="循环控制与自动化">Loop Control &amp; Automation</span></h2>
+  <p class="section-intro" data-zh="单次流水线是工具。循环才是系统。循环工程决定了流水线在不需要手动重新配置的情况下在运行之间的适应能力。">A one-shot pipeline is a tool. A loop is a system. Loop engineering determines how well the pipeline adapts between runs without requiring manual reconfiguration.</p>
+
+  <div class="card-row cols3">
+    <div class="sys-card dlr">
+      <div class="sys-title">Dynamic-LR — <code>loop_control.py</code></div>
+      <p data-zh="具有文档化确定性规则的专用状态机模块。从 <code>query_state</code> 和 <code>runs</code> 表读取数据，以生成每次运行的配置调整：查询优先级排序、动态过滤阈值、目标论文的回退行为。规则被列举和记录——无隐藏逻辑。">A dedicated state-machine module with documented deterministic rules. Reads from <code>query_state</code> and <code>runs</code> tables to produce per-run configuration adjustments: query priority ordering, dynamic filter thresholds, fallback behavior for target papers. Rules are enumerated and documented — no hidden logic.</p>
+    </div>
+    <div class="sys-card prs">
+      <div class="sys-title" data-zh="PRS — LLM 优化循环">PRS — LLM refinement loop</div>
+      <p data-zh="PRS 中的"循环"是由 Ollama 驱动的运行内反馈循环。评分后，如果结果未通过 <code>results_acceptable</code>，LLM 会重写查询并继续运行。这是一个智能体式、非确定性的循环——而非可重复的自动化流水线。">The "loop" in PRS is an intra-run feedback loop driven by Ollama. After scoring, if results fail <code>results_acceptable</code>, the LLM rewrites the query and the run continues. This is an agentic, non-deterministic loop — not a repeatable automation pipeline.</p>
+    </div>
+    <div class="sys-card pf">
+      <div class="sys-title" data-zh="PF — 无循环控制">PF — No loop control</div>
+      <p data-zh="PF 是单次流水线。它没有运行间状态（除嵌入缓存外）且无自适应行为。相同配置每次运行产生相同查询。唯一的自适应元素是日期间隙验证器，它揭示缺失的日期——但不对其采取行动。">PF is a single-pass pipeline. It has no inter-run state (besides the embedding cache) and no adaptive behavior. The same config produces the same queries every run. The only adaptive element is the date-gap validator which surfaces missing days — but does not act on them.</p>
+    </div>
+  </div>
+
+  <div class="divider-label"><span data-zh="深度分析">Deep Dive</span></div>
+
+  <h3 data-zh="Dynamic-LR 循环控制规则">Dynamic-LR Loop Control Rules</h3>
+  <div class="card">
+    <div class="card-row cols2">
+      <div>
+        <h4 data-zh="查询优先级降级">Query priority demotion</h4>
+        <p data-zh="如果一个查询连续 N 次运行产生零接受论文，则将其分配较低优先级并延后执行（或在 <code>max_queries</code> 紧张时跳过）。具有持续高接受率的查询会被提升为优先运行。">If a query produces zero accepted papers for N consecutive runs, it is assigned lower priority and executed later (or skipped if <code>max_queries</code> is tight). Queries with consistently high acceptance rates are promoted to run first.</p>
+        <div class="pro-con" style="grid-template-columns:1fr;">
+          <div class="pro-list"><h5 data-zh="原因">Why</h5><ul class="items">
+            <li data-zh="API 调用不是免费的——停止在毫无产出的查询上浪费预算">API calls are not free — stop wasting budget on queries that produce nothing</li>
+            <li data-zh="随着数据库成熟，使运行保持在速率限制预算内">Keeps the run within rate-limit budget as the database matures</li>
+          </ul></div>
+        </div>
+      </div>
+      <div>
+        <h4 data-zh="高重复率响应">High duplicate-rate response</h4>
+        <p data-zh="如果近期运行中 <code>duplicate_rate > 0.80</code>，循环控制会添加时间新近性过滤器（发布日期在上次运行之后），以优先选择新发布的论文而非数据库中已有的论文。">If <code>duplicate_rate > 0.80</code> in recent runs, the loop control adds a recency filter (publication date after last run) to prefer newly published papers over ones already in the database.</p>
+        <div class="pro-con" style="grid-template-columns:1fr;">
+          <div class="pro-list"><h5 data-zh="原因">Why</h5><ul class="items">
+            <li data-zh="随着数据库增长，更多检索到的论文已经是已知的">As the database grows, more retrieved papers are already known</li>
+            <li data-zh="没有适应机制，流水线会浪费 API 调用来重复检索旧论文">Without adaptation, the pipeline wastes API calls re-retrieving old papers</li>
+          </ul></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3 data-zh="PF — 日期间隙检测">PF — Date Gap Detection</h3>
+  <pre><span class="cm"># Check which dates in the expected window have zero papers</span>
+gaps = [d.isoformat() <span class="kw">for</span> d <span class="kw">in</span> date_range
+        <span class="kw">if</span> date_counts[d.isoformat()] == <span class="nu">0</span>]</pre>
+  <p data-zh="这是 PF 中唯一的自适应质量检查——它检测 <code>days_back</code> 窗口中没有论文的日期，表明抓取可能遗漏了条目。">This is the only adaptive quality check in PF — it detects days in the <code>days_back</code> window that have no papers, suggesting the fetch may have missed entries.</p>
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="优点">Pros</h5><ul class="items">
+      <li data-zh="可见的可操作性监控信号——间隙被打印并包含在运行摘要中">Visible signal for operability monitoring — gaps are printed and included in the run summary</li>
+      <li data-zh="区分"当天没有发布论文"和"论文被遗漏"">Distinguishes "no papers published that day" from "papers were missed"</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+      <li data-zh="仅检测——无自动重试或回退操作">Detection only — no automatic retry or fallback action</li>
+      <li data-zh="许多主题在周末确实没有论文；所有间隙看起来都一样">Many topics will genuinely have zero papers on weekends; all gaps look the same</li>
+      <li data-zh="不适用于使用年份窗口的基线（Dynamic-LR、PRS），它们不使用滚动日期窗口">Not applicable to year-window baselines (Dynamic-LR, PRS) which don't use a rolling date window</li>
+    </ul></div>
+  </div>
+
+  <h3 data-zh="目标论文检测（仅 Dynamic-LR）">Target Paper Detection (Dynamic-LR only)</h3>
+  <p data-zh="如果配置了 <code>target_papers</code>，Dynamic-LR 使用五级回退链来检查每个目标是否被找到并接受：">If <code>target_papers</code> are configured, Dynamic-LR uses a five-level fallback chain to check whether each target was found and accepted:</p>
+  <pre>1. DOI lookup via S2 paper/<span class="st">{doi}</span>
+2. S2 paperId lookup via S2 paper/<span class="st">{id}</span>
+3. arXiv ID lookup
+4. Exact normalized title match in database
+5. Quoted title search against S2 API</pre>
+  <div class="pro-con">
+    <div class="pro-list"><h5 data-zh="优点">Pros</h5><ul class="items">
+      <li data-zh="直接测量已知真实论文上的检索召回率">Directly measures retrieval recall on known ground-truth papers</li>
+      <li data-zh="识别遗漏的论文是未找到还是找到了但被拒绝（及原因）">Identifies whether a missed paper was not found or was found but rejected (and why)</li>
+      <li data-zh="支持基线与智能体架构的结构化评估">Enables structured evaluation of baseline vs. agent architectures</li>
+    </ul></div>
+    <div class="con-list"><h5 data-zh="缺点">Cons</h5><ul class="items">
+      <li data-zh="需要手动整理目标论文——对用户有额外工作量">Requires manual curation of target papers — effort for the user</li>
+      <li data-zh="回退查找增加未计入查询指标的 API 调用">Fallback lookups add API calls not counted in query metrics</li>
+    </ul></div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     FEATURE MATRIX
+═══════════════════════════════════════════════════════════ -->
+<section id="matrix">
+  <h2 data-zh="功能矩阵">Feature Matrix</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr>
+      <th data-zh="功能">Feature</th>
+      <th style="text-align:center">Dynamic-LR</th>
+      <th style="text-align:center">PRS</th>
+      <th style="text-align:center">PF</th>
+    </tr></thead>
+    <tbody>
+      <tr><td colspan="4" style="background:var(--surface); color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; padding:.4rem .9rem;" data-zh="数据源">Sources</td></tr>
+      <tr><td class="dim">Semantic Scholar</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-yes"><span>✓</span></td><td class="matrix-yes"><span>✓</span></td></tr>
+      <tr><td class="dim">arXiv</td><td class="matrix-no"><span>–</span></td><td class="matrix-yes"><span>✓</span></td><td class="matrix-yes"><span>✓</span></td></tr>
+      <tr><td class="dim">OpenAlex</td><td class="matrix-no"><span>–</span></td><td class="matrix-no"><span>–</span></td><td class="matrix-yes"><span>✓</span></td></tr>
+      <tr><td class="dim" data-zh="异步并发抓取">Async concurrent fetch</td><td class="matrix-no"><span>–</span></td><td class="matrix-no"><span>–</span></td><td class="matrix-yes"><span>✓</span></td></tr>
+      <tr><td colspan="4" style="background:var(--surface); color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; padding:.4rem .9rem;" data-zh="查询">Query</td></tr>
+      <tr><td class="dim" data-zh="主题 + 问题 + 提示">Topic + questions + hints</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td><td class="matrix-partial"><span data-zh="仅提示">hints only</span></td></tr>
+      <tr><td class="dim" data-zh="组合 top-N 词元查询">Combined top-N token query</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td><td class="matrix-no"><span>–</span></td></tr>
+      <tr><td class="dim" data-zh="LLM 查询优化">LLM query refinement</td><td class="matrix-no"><span>–</span></td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td></tr>
+      <tr><td class="dim" data-zh="确定性查询生成">Deterministic query generation</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-partial"><span>--no-refine</span></td><td class="matrix-yes"><span>✓</span></td></tr>
+      <tr><td colspan="4" style="background:var(--surface); color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; padding:.4rem .9rem;" data-zh="评分">Scoring</td></tr>
+      <tr><td class="dim" data-zh="词法公式（加权）">Lexical formula (weighted)</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td><td class="matrix-no"><span>–</span></td></tr>
+      <tr><td class="dim" data-zh="TF-IDF 余弦">TF-IDF cosine</td><td class="matrix-no"><span>–</span></td><td class="matrix-yes"><span>✓</span></td><td class="matrix-yes"><span>✓</span></td></tr>
+      <tr><td class="dim" data-zh="SBERT 语义">SBERT semantic</td><td class="matrix-no"><span>–</span></td><td class="matrix-yes"><span>✓</span></td><td class="matrix-yes"><span>✓</span></td></tr>
+      <tr><td class="dim" data-zh="FAISS 索引">FAISS index</td><td class="matrix-no"><span>–</span></td><td class="matrix-no"><span>–</span></td><td class="matrix-yes"><span>✓</span></td></tr>
+      <tr><td class="dim" data-zh="嵌入持久化缓存">Embedding persistence cache</td><td class="matrix-no"><span>–</span></td><td class="matrix-no"><span>–</span></td><td class="matrix-yes"><span>✓</span></td></tr>
+      <tr><td class="dim" data-zh="引用/标识符评分">Citation / identifier score</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td><td class="matrix-no"><span>–</span></td></tr>
+      <tr><td class="dim" data-zh="每篇论文的命名评分组件">Named score components per paper</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-partial"><span data-zh="方法字典">method dict</span></td><td class="matrix-partial"><span data-zh="2 个字段">2 fields</span></td></tr>
+      <tr><td colspan="4" style="background:var(--surface); color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; padding:.4rem .9rem;" data-zh="去重">Deduplication</td></tr>
+      <tr><td class="dim" data-zh="跨会话 SQLite 去重">Cross-session SQLite dedup</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td></tr>
+      <tr><td class="dim" data-zh="基于完整性的合并">Completeness-based merge</td><td class="matrix-no"><span>–</span></td><td class="matrix-no"><span>–</span></td><td class="matrix-yes"><span>✓</span></td></tr>
+      <tr><td class="dim" data-zh="合并事件日志">Merge event log</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td></tr>
+      <tr><td colspan="4" style="background:var(--surface); color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; padding:.4rem .9rem;" data-zh="API 健壮性">API Robustness</td></tr>
+      <tr><td class="dim" data-zh="指数退避 + 抖动">Exponential backoff + jitter</td><td class="matrix-no"><span>–</span></td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td></tr>
+      <tr><td class="dim" data-zh="Retry-After 头">Retry-After header</td><td class="matrix-no"><span>–</span></td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td></tr>
+      <tr><td class="dim" data-zh="5xx 重试">5xx retry</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td><td class="matrix-no"><span>–</span></td></tr>
+      <tr><td class="dim" data-zh="API 响应缓存（TTL）">API response cache (TTL)</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-partial"><span data-zh="无 TTL">no TTL</span></td><td class="matrix-no"><span>–</span></td></tr>
+      <tr><td colspan="4" style="background:var(--surface); color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; padding:.4rem .9rem;" data-zh="持久化与输出">Persistence &amp; Output</td></tr>
+      <tr><td class="dim" data-zh="SQLite 主存储">SQLite primary store</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td></tr>
+      <tr><td class="dim" data-zh="query_state 追踪表">query_state tracking table</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td><td class="matrix-no"><span>–</span></td></tr>
+      <tr><td class="dim" data-zh="原子文件写入">Atomic file writes</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td><td class="matrix-no"><span>–</span></td></tr>
+      <tr><td class="dim" data-zh="静态站点导出">Static site export</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td><td class="matrix-yes"><span>✓</span></td></tr>
+      <tr><td class="dim" data-zh="类型化拒绝记录 + 证据">Typed reject records + evidence</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-partial"><span data-zh="仅原因">reason only</span></td><td class="matrix-partial"><span data-zh="仅原因">reason only</span></td></tr>
+      <tr><td colspan="4" style="background:var(--surface); color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; padding:.4rem .9rem;" data-zh="循环与评估">Loop &amp; Evaluation</td></tr>
+      <tr><td class="dim" data-zh="循环控制状态机">Loop control state machine</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td><td class="matrix-no"><span>–</span></td></tr>
+      <tr><td class="dim" data-zh="目标论文检测">Target paper detection</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td><td class="matrix-no"><span>–</span></td></tr>
+      <tr><td class="dim" data-zh="日期间隙验证">Date-gap validation</td><td class="matrix-no"><span>–</span></td><td class="matrix-no"><span>–</span></td><td class="matrix-yes"><span>✓</span></td></tr>
+      <tr><td class="dim" data-zh="架构比较结果">Architecture comparison result</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-yes"><span>✓</span></td><td class="matrix-no"><span>–</span></td></tr>
+      <tr><td class="dim" data-zh="完全无 LLM">Fully LLM-free</td><td class="matrix-yes"><span>✓</span></td><td class="matrix-partial"><span data-zh="可选">optional</span></td><td class="matrix-yes"><span>✓</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SYNTHESIS
+═══════════════════════════════════════════════════════════ -->
+<section id="synthesis">
+  <h2 data-zh="综合 — 构建终极基线">Synthesis — Building the Ultimate Baseline</h2>
+  <p class="section-intro" data-zh="以下十项建议各自借鉴了某一系统中的成熟元素，并将其整合到 Dynamic-LR 的架构中。它们按预期对检索质量和覆盖率的影响从大到小排序。">Each of the ten recommendations below borrows a proven element from one system and integrates it into Dynamic-LR's architecture. They are ordered by expected impact on retrieval quality and coverage.</p>
+
+  <div class="synth-card">
+    <span class="synth-num">1</span>
+    <h4 data-zh="添加 SBERT + FAISS 评分">Add SBERT + FAISS Scoring</h4>
+    <p data-zh="采用 PF 的 <code>score_papers_sbert</code> + <code>faiss.IndexFlatIP</code> 作为主评分器。保留 Dynamic-LR 的词法公式作为可解释性辅助。在每篇论文上存储两种评分——PF 已建立的模式。SBERT 评分驱动接受/拒绝决策；词法评分驱动拒绝证据和审计追踪。添加 PF 的 numpy 嵌入缓存以避免在重复运行时重新编码。">Adopt PF's <code>score_papers_sbert</code> + <code>faiss.IndexFlatIP</code> as the primary scorer. Keep Dynamic-LR's lexical formula as the explainability companion. Store both scores on every paper — the pattern PF already established. The SBERT score drives the accept/reject decision; the lexical score drives the reject evidence and audit trail. Add PF's numpy embedding cache to avoid re-encoding on repeat runs.</p>
+  </div>
+
+  <div class="synth-card">
+    <span class="synth-num">2</span>
+    <h4 data-zh="添加 arXiv 数据源适配器">Add arXiv Source Adapter</h4>
+    <p data-zh="按照 <code>semantic_scholar_client.py</code> 使用的接口添加模块化 arXiv 抓取器。使用 PRS 的 XML 解析器以提高可靠性。将结果路由通过现有的 <code>normalizer.py</code> 和 <code>identity.py</code>，使 arXiv 论文进入与 S2 论文相同的去重链。">Add a modular arXiv fetcher following the interface used by <code>semantic_scholar_client.py</code>. Use PRS's XML parser for reliability. Route results through the existing <code>normalizer.py</code> and <code>identity.py</code> so arXiv papers enter the same deduplication chain as S2 papers.</p>
+  </div>
+
+  <div class="synth-card">
+    <span class="synth-num">3</span>
+    <h4 data-zh="添加 OpenAlex 数据源适配器">Add OpenAlex Source Adapter</h4>
+    <p data-zh="按照 PF 的 <code>fetch_openalex</code> 模式添加 OpenAlex，包括 PF 的倒排索引摘要重建。在 <code>identity.py</code> 中添加 OpenAlex ID 作为第五个身份类型。OpenAlex 免费且无需密钥——在不给 S2 增加任何配额压力的情况下增加覆盖率。">Add OpenAlex following PF's <code>fetch_openalex</code> pattern, including PF's abstract reconstruction from inverted index. Add OpenAlex ID as a fifth identity type in <code>identity.py</code>. OpenAlex is free and keyless — it adds coverage without any quota pressure on S2.</p>
+  </div>
+
+  <div class="synth-card">
+    <span class="synth-num">4</span>
+    <h4 data-zh="升级为异步并发抓取">Upgrade to Async Concurrent Fetch</h4>
+    <p data-zh="按照 PF 的模式将所有三个数据源抓取器包装在 <code>asyncio.gather</code> 调用中。每个数据源并行运行；失败返回异常而不中止其他数据源。预计在多数据源运行中提速 2–3 倍。">Wrap all three source fetchers in an <code>asyncio.gather</code> call following PF's pattern. Each source runs in parallel; failures return exceptions without aborting the others. Estimated speedup: 2–3× on multi-source runs.</p>
+  </div>
+
+  <div class="synth-card">
+    <span class="synth-num">5</span>
+    <h4 data-zh="用 PRS 退避策略升级 S2 客户端">Upgrade S2 Client with PRS Backoff</h4>
+    <p data-zh="将 <code>semantic_scholar_client.py</code> 中当前的 429 处理器替换为 PRS 的模式：首先读取 <code>Retry-After</code> 头；退回到带抖动的指数退避（<code>base × 2^attempt × uniform(1.0, 1.5)</code>）。上限 60 秒。这防止了多个并行工作者的同步重试。">Replace the current 429 handler in <code>semantic_scholar_client.py</code> with PRS's pattern: read <code>Retry-After</code> header first; fall back to exponential backoff with jitter (<code>base × 2^attempt × uniform(1.0, 1.5)</code>). Cap at 60 s. This prevents synchronized retries from multiple parallel workers.</p>
+  </div>
+
+  <div class="synth-card">
+    <span class="synth-num">6</span>
+    <h4 data-zh="采用基于完整性的合并选择">Adopt Completeness-Based Merge Selection</h4>
+    <p data-zh="在 <code>deduper.py</code> 中，在合并步骤之前添加 PF 的 <code>_completeness_score</code>。如果传入候选项得分高于现有记录，则将传入候选项作为基础，并从现有记录填充其缺失字段。这确保最丰富的可用记录始终是规范的。">In <code>deduper.py</code>, add PF's <code>_completeness_score</code> before the merge step. If the incoming candidate scores higher than the existing record, make the incoming candidate the base and fill its missing fields from the existing record. This ensures the richest available record is always canonical.</p>
+  </div>
+
+  <div class="synth-card">
+    <span class="synth-num">7</span>
+    <h4 data-zh="持久化 SBERT 嵌入缓存">Persist SBERT Embedding Cache</h4>
+    <p data-zh="添加 PF 的 <code>cache.py</code> 模式：以 <code>paper_id</code> 为键保存嵌入的 numpy 数组，以及存储模型名称的元数据文件以在模型更改时自动重置。在重复运行时，只有新检索的论文需要编码。随着数据库增长，这对运行时间变得至关重要。">Add PF's <code>cache.py</code> pattern: save a numpy array of embeddings keyed by <code>paper_id</code>, with a metadata file storing the model name for auto-reset on model change. On repeat runs, only newly retrieved papers need encoding. As the database grows this becomes critical for run time.</p>
+  </div>
+
+  <div class="synth-card">
+    <span class="synth-num">8</span>
+    <h4 data-zh="添加日期间隙验证">Add Date-Gap Validation</h4>
+    <p data-zh="将 PF 的 <code>validate_fetch_results</code> 添加为抓取后检查。对于年份窗口流水线，将其调整为按年而非按天检查覆盖率。在运行制品和 <code>ManagerRunResult</code> 中包含间隙摘要。">Add PF's <code>validate_fetch_results</code> as a post-fetch check. For year-window pipelines, adapt it to check coverage by year rather than day. Include the gap summary in the run artifact and <code>ManagerRunResult</code>.</p>
+  </div>
+
+  <div class="synth-card">
+    <span class="synth-num">9</span>
+    <h4 data-zh="添加 ML 缩略语扩展">Add ML Acronym Expansion</h4>
+    <p data-zh="将 PRS 的 <code>ML_ACRONYM_EXPANSIONS</code> 查找表作为静态预处理步骤添加到 <code>query_builder.py</code>，在生成组合查询之前应用于主题字符串。这是确定性的、无依赖的，并且在无需 LLM 的情况下恢复了常见缩略语（<code>rag</code>、<code>llm</code>、<code>rlhf</code>、<code>cot</code>）的检索覆盖率。">Add PRS's <code>ML_ACRONYM_EXPANSIONS</code> lookup table to <code>query_builder.py</code> as a static pre-processing step applied to the topic string before generating the combined query. This is deterministic, dependency-free, and recovers retrieval coverage on common abbreviations (<code>rag</code>, <code>llm</code>, <code>rlhf</code>, <code>cot</code>) without an LLM.</p>
+  </div>
+
+  <div class="synth-card">
+    <span class="synth-num">10</span>
+    <h4 data-zh="循环控制中的确定性多轮回退">Deterministic Multi-Round Fallback in Loop Control</h4>
+    <p data-zh="在 <code>loop_control.py</code> 中用确定性回退规则替换 PRS 中的 LLM 优化概念：如果评分后 <code>good_count &lt; 3</code>，在下一次运行时通过包含下一层查询提示来扩大查询集。如果 <code>duplicate_rate > 0.80</code>，添加日期过滤器。这无需任何 LLM 依赖即可捕获 PRS 优化循环的<em>意图</em>。">Replace the LLM refinement concept from PRS with a deterministic fallback rule in <code>loop_control.py</code>: if <code>good_count &lt; 3</code> after scoring, widen the query set on the next run by including the next-tier query hints. If <code>duplicate_rate > 0.80</code>, add a date filter. This captures the <em>intent</em> of PRS's refinement loop without any LLM dependency.</p>
+  </div>
+
+  <div class="insight" style="margin-top:2rem;">
+    <strong data-zh="关于确定性的最终说明：">Final note on determinism:</strong> <span data-zh="SBERT 嵌入是确定性的——相同文本通过相同固定权重模型每次产生相同向量。添加 SBERT 不违反基线的确定性要求。它只违反了"v1 中无嵌入"的约束，这被明确列为待重新审视的首次迭代限制。以上十项建议对于相同的配置、数据库状态和 API 响应产生完全可重复的结果。">SBERT embeddings are deterministic — the same text through the same fixed-weight model produces the same vector every time. Adding SBERT does not violate the baseline's determinism requirement. It only violates the "no embeddings in v1" constraint, which was explicitly listed as a first-iteration limitation to be revisited. All ten recommendations above produce fully reproducible results for the same config, database state, and API responses.</span>
+  </div>
+
+  <div class="divider-label"><span data-zh="基于研究的实施阶段">Research-Grounded Implementation Phases</span></div>
+  <p data-zh="智能体上下文文档定义了四个优先级阶段。将上述十项建议映射到这些阶段：">The agent context document defines four priority phases. Mapping the ten recommendations above into those phases:</p>
+
+  <div class="tbl-wrap"><table>
+    <thead><tr>
+      <th data-zh="阶段">Phase</th><th data-zh="重点">Focus</th><th data-zh="来自本比较的建议">Recommendations from this comparison</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td><strong style="color:var(--pro);">P0</strong></td>
+        <td data-zh="正确性与可审计性">Correctness &amp; auditability</td>
+        <td data-zh="规范论文 ID（已完成）· <code>api_cache</code> 中的原始负载快照（已完成）· 带类型化合并事件的保守去重（已完成）· 原子写入（已完成）· <strong>添加：基于完整性的合并（#6）</strong>">Canonical paper IDs (already done) · raw payload snapshots in <code>api_cache</code> (already done) · conservative deduplication with typed merge events (already done) · atomic writes (already done) · <strong>add: completeness-based merge (#6)</strong></td>
+      </tr>
+      <tr>
+        <td><strong style="color:var(--accent1);">P1</strong></td>
+        <td data-zh="强基线与可比较输出">Strong baseline &amp; comparable outputs</td>
+        <td data-zh="确定性查询模板（已完成）· <strong>添加：SBERT + FAISS（#1）</strong>· <strong>添加：arXiv（#2）</strong>· <strong>添加：OpenAlex（#3）</strong>· <strong>添加：PRS 退避（#5）</strong>· 添加类型化 <code>ScreeningDecision</code> 记录 · <code>python -m app.run --architecture baseline --dry-run</code>">Deterministic query templates (done) · <strong>add: SBERT + FAISS (#1)</strong> · <strong>add: arXiv (#2)</strong> · <strong>add: OpenAlex (#3)</strong> · <strong>add: PRS backoff (#5)</strong> · add typed <code>ScreeningDecision</code> records · <code>python -m app.run --architecture baseline --dry-run</code></td>
+      </tr>
+      <tr>
+        <td><strong style="color:var(--accent2);">P2</strong></td>
+        <td data-zh="智能体评审轮次">Agentic review rounds</td>
+        <td data-zh="每个候选项添加 <code>RetrievalEvent</code> 记录 · <strong>添加：异步并发抓取（#4）</strong>· <strong>添加：嵌入缓存（#7）</strong>· 添加确定性多轮回退（#10）· 单/多智能体的类型化审阅者合约">Add <code>RetrievalEvent</code> records per candidate · <strong>add: async concurrent fetch (#4)</strong> · <strong>add: embedding cache (#7)</strong> · add deterministic multi-round fallback (#10) · typed reviewer contracts for single/multi-agent</td>
+      </tr>
+      <tr>
+        <td><strong style="color:var(--muted);">P3/P4</strong></td>
+        <td data-zh="语义组织与界面">Semantic organization &amp; interface</td>
+        <td data-zh="<strong>添加：日期间隙验证（#8）</strong>· <strong>添加：ML 缩略语扩展（#9）</strong>· 用于聚类的版本化嵌入 · <code>EvidenceUnit</code> 和来源图 · 聚类卡片 · 层次化综合链"><strong>add: date-gap validation (#8)</strong> · <strong>add: ML acronym expansion (#9)</strong> · versioned embeddings for clustering · <code>EvidenceUnit</code> and provenance graph · cluster cards · hierarchical synthesis chain</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="rp-box" style="margin-top:1.5rem;">
+    <strong data-zh="研究原则 — 超越计数的评估：">Research Principle — Evaluation beyond counts:</strong> <span data-zh="文献建议至少报告：检索召回率/精确率/F1、数据源覆盖率、重复率、错误合并率、筛选准确性，以及运营指标（运行时间、API 调用、缓存命中率、重试率）。Dynamic-LR 的 <code>ManagerRunResult</code> 和 <code>query_state</code> 表是积累这些指标的正确位置。目前 PRS 和 PF 都没有公开足够的结构化输出来支持这一级别的跨架构比较。">The literature recommends reporting at minimum: retrieval recall/precision/F1, source coverage, duplicate rate, false-merge rate, screening accuracy, and operational metrics (runtime, API calls, cache hit rate, retry rate). Dynamic-LR's <code>ManagerRunResult</code> and <code>query_state</code> table are the right place to accumulate these. Neither PRS nor PF exposes enough structured output to support this level of cross-architecture comparison today.</span>
+    <span class="rp-src">— Agentic AutoSurvey §5; Dynamic-LR agent context §6.2</span>
+  </div>
+</section>
+
+</main>
+
+<footer data-zh="Dynamic-LR 基线比较 · 生成于 2026-06-24 · 系统：Dynamic-LR · PRS (cherryann518) · PF (WoosungLim01) · 基于：InsightAgent (arXiv:2504.14822) · Agentic AutoSurvey (arXiv:2509.18661) · LatteReview (arXiv:2501.05468)">
+  Dynamic-LR Baseline Comparison · Generated 2026-06-24 · Systems: Dynamic-LR · PRS (cherryann518) · PF (WoosungLim01) · Grounded in: InsightAgent (arXiv:2504.14822) · Agentic AutoSurvey (arXiv:2509.18661) · LatteReview (arXiv:2501.05468)
+</footer>
+
+<script>
+function toggleLang(){
+  const html = document.documentElement;
+  const btn = document.getElementById('lang-toggle');
+  if(html.lang === 'en'){
+    html.lang = 'zh';
+    btn.textContent = 'EN';
+    document.querySelectorAll('[data-zh]').forEach(el=>{
+      if(!el._en) el._en = el.innerHTML;
+      el.innerHTML = el.getAttribute('data-zh');
+    });
+    localStorage.setItem('lang','zh');
+  } else {
+    html.lang = 'en';
+    btn.textContent = '中文';
+    document.querySelectorAll('[data-zh]').forEach(el=>{
+      if(el._en !== undefined) el.innerHTML = el._en;
+    });
+    localStorage.setItem('lang','en');
+  }
+}
+(function(){ if(localStorage.getItem('lang')==='zh') toggleLang(); })();
+</script>
+</body>
+</html>

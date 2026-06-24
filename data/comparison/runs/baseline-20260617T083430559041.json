@@ -1,0 +1,26 @@
+{
+  "run_id": "baseline-20260617T083430559041",
+  "architecture": "baseline",
+  "metrics": {
+    "runtime_seconds": 169.338,
+    "api_call_count": 30,
+    "cache_hit_count": 0,
+    "cache_miss_count": 8,
+    "raw_candidate_count": 100,
+    "normalized_candidate_count": 100,
+    "deduplicated_candidate_count": 100,
+    "accepted_count": 100,
+    "rejected_count": 0,
+    "duplicate_count": 0,
+    "merge_count": 0,
+    "new_paper_count": 100,
+    "updated_paper_count": 0,
+    "error_count": 6,
+    "avg_api_latency_ms": 368.43,
+    "db_write_time_ms": 5.94,
+    "publish_time_ms": 19.99,
+    "duplicate_rate": 0.0,
+    "error_rate": 0.2,
+    "cache_hit_rate": 0.0
+  }
+}

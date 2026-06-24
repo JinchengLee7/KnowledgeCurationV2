@@ -1,0 +1,11 @@
+{
+  "architecture": "baseline",
+  "status": "finished",
+  "run_id": "baseline-20260617T083803404878",
+  "updated_at": "2026-06-17T08:39:40.618578+00:00",
+  "message": "partial_success",
+  "last_run": "2026-06-17T08:39:40.612425+00:00",
+  "papers_accepted": 193,
+  "candidates_rejected": 6,
+  "total_papers": 193
+}
