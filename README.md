@@ -64,13 +64,17 @@ and records enough state that the **next** run can adapt by fixed rules.
 
 ![Pipeline diagram](docs/pipeline.png)
 
-*Solid black = happy path. Dashed red = fail-soft exits (error recorded, run
-continues). Dashed violet = SQLite reads/writes (including response cache).
-Dashed teal = feedback edge: per-query outcomes written to `query_state` feed
-the next run's loop-control.*
+*Solid black = happy path. Blue fan-out/in = three providers queried concurrently
+(`asyncio.gather`). Dashed red = fail-soft exits (error recorded, run continues).
+Dashed violet = SQLite reads/writes (including response cache). Dashed teal =
+feedback edge: per-query outcomes written to `query_state` feed the next run's
+loop-control.*
 
 The source is `docs/pipeline.tex` (TikZ/LaTeX, `standalone` class). Re-compile
-with `pdflatex docs/pipeline.tex` if you edit it.
+with `pdflatex docs/pipeline.tex && python -c "import fitz; ..."` if you edit it.
+
+For a step-by-step bilingual walkthrough of every substep, see
+[`docs/pipeline_for_everyone.md`](docs/pipeline_for_everyone.md).
 
 ### Three-layer separation
 
@@ -476,6 +480,7 @@ data/
 docs/
   pipeline.tex              TikZ source for the pipeline diagram
   pipeline.png              rendered diagram (embedded above)
+  pipeline_for_everyone.md  bilingual step-by-step walkthrough of every pipeline stage
   baseline_technical.md     extended technical notes
   qa_scoring_database_queries.md
 
